@@ -1,0 +1,12 @@
+{
+  "name": "backend-utils",
+  "version": "0.0.2",
+  "private": true,
+  "dependencies": {
+    "hiredis": "^0.1.17",
+    "jayson": "^1.1.1",
+    "moment": "^2.8.2",
+    "q": "^1.0.1",
+    "redis": "^0.12.1"
+  }
+}

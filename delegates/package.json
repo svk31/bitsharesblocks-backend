@@ -1,0 +1,14 @@
+{
+  "name": "backend-delegates",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "forever -c '/usr/bin/nodemon --harmony --delay 5 --exitcrash' delegates.js"
+  },
+  "dependencies": {
+    "moment": "^2.8.2",
+    "mongodb": "^1.4.25",
+    "monk": "^0.9.0",
+    "q": "^1.0.1"
+  }
+}

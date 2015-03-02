@@ -1,0 +1,10 @@
+{
+  "rpc_username":"my_username",
+  "rpc_password":"my_password",
+  "rpc_port":5001,
+  "server_port":2095,
+  "api_port": 2086,
+  "database":"bitshares",
+  "baseSymbol":"BTS",
+  "basePrecision": 100000
+}

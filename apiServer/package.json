@@ -1,0 +1,21 @@
+{
+  "name": "backend-delegates",
+  "version": "0.0.2",
+  "private": true,
+  "scripts": {
+    "start": "forever -c '/usr/bin/nodemon --delay 2 --exitcrash --harmony' ./bin/www"
+  },
+  "dependencies": {
+    "apicache": "0.0.12",
+    "body-parser": "~1.0.0",
+    "compression": "^1.1.1",
+    "cors": "^2.5.3",
+    "debug": "~0.7.4",
+    "express": "~4.2.0",
+    "moment": "^2.8.4",
+    "monk": "^0.9.0",
+    "morgan": "~1.0.0",
+    "q": "^1.1.2",
+    "sizeof": "^1.0.0"
+  }
+}
