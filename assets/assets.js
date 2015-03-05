@@ -13,7 +13,7 @@ var supply = require('./components/supply');
 var forks = require('./components/forks');
 
 // INTERVALS
-setInterval(feeds.launchFeedUpdate, 1000 * 20);
+setInterval(feeds.launchFeedUpdate, 1000 * 60);
 setInterval(assets.launchAssetUpdate, 1000 * 20);
 setInterval(forks.update, 1000 * 60 * 5);
 setInterval(feeds.feedHistory, 1000 * 60 * 30);

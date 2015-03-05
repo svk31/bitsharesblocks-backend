@@ -18,6 +18,7 @@ var db = require('monk')('localhost/' + config.database);
 var blocksCollection = db.get('blocks');
 var transactionsCollection = db.get('transactions');
 
+
 var setIndex = true;
 if (setIndex) {
 	blocksCollection.ensureIndex({
@@ -48,6 +49,11 @@ if (setIndex) {
 		reg_date_ISO: 1,
 		types: 1
 	});
+
+	transactionsCollection.ensureIndex({
+		types: 1
+	});
+
 }
 
 // FUNCTIONS

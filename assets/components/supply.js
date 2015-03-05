@@ -12,6 +12,10 @@ var db = require('monk')('localhost/' + config.database);
 var assetsCollection = db.get('assets_v2');
 var supplyCollection = db.get('supply');
 
+supplyCollection.ensureIndex({
+  marketAsset: 1
+});
+
 // FUNCTIONS
 
 function assetSupply() {

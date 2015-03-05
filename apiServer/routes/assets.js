@@ -381,8 +381,8 @@ module.exports = function(db, app, apicache) {
     var start = !isNaN(new Date(query.start)) ? new Date(query.start) : 0;
     var end = !isNaN(new Date(query.end)) ? new Date(query.end) : new Date();
 
-    // console.log('start:', start);
-    // console.log('end:', end);
+    console.log('start:', start);
+    console.log('end:', end);
 
     console.log({
       $gte: start.getTime(),
