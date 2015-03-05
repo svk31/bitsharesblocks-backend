@@ -49,9 +49,7 @@ function homeUpdate() {
         }
       }),
       accountsCollection.count({
-        name: {
-          $regex: /\./
-        }
+        isSub: true
       }),
       delegatesListCollection.count({}),
       delegatesListCollection.count({

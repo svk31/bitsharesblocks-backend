@@ -5,6 +5,8 @@ module.exports = function(db, app, apicache) {
   var Q = require('q');
   var cors = require('cors');
 
+  var config = require('../../config.json');
+
   // VARIABLES
   var assetsCollection = db.get('assets');
   var assetsCollectionv2 = db.get('assets_v2');
@@ -104,6 +106,92 @@ module.exports = function(db, app, apicache) {
           };
 
           return res.json(JSON.stringify(returnObject));
+        } else {
+          return res.status(404).send();
+        }
+      })
+      .catch(function(err) {
+        return res.status(500).send();
+      });
+  });
+
+  app.get('/v2/cmc', apicache('60 seconds'), function(req, res) {
+    Q.all([
+        assetsCollectionv2.find({
+          issuer_account_id: {
+            $lte: 0
+          }
+        }, {
+          sort: {
+            _id: 1
+          },
+          fields: {
+            base: 0,
+            status: 0
+          }
+        }),
+        feedsCollection.find({}, {
+          fields: {
+            medianFeed: 1,
+            symbol: 1
+          },
+          sort: {
+            '_id': 1
+          }
+        })
+      ])
+      .then(function(results) {
+        if (results) {
+          var lastHour = new Date();
+          lastHour.setHours(lastHour.getHours() - 1);
+          var i;
+          var assets = results[0];
+          var feeds = results[1];
+          var returnObject = {};
+          returnObject.assets = [];
+
+          // BTS Supply data
+          returnObject.BTS = {
+            symbol: assets[0].symbol,
+            supply: assets[0].current_share_supply / 100000
+          };
+
+          // Market assets data
+          for (i = 1; i < assets.length; i++) {
+            if (!returnObject.assets[i - 1]) {
+              returnObject.assets[i - 1] = {};
+            }
+
+            for (var j = 0; j < feeds.length; j++) {
+
+              if (feeds[j].symbol === assets[i].symbol) {
+                assets[i].medianFeed = feeds[j].medianFeed;
+                break;
+              }
+            }
+
+            if (assets[i]._id !== 0) {
+              returnObject.assets[i - 1].symbol = assets[i].symbol;
+              returnObject.assets[i - 1].price = assets[i].lastPrice || 0; // Use vw current price for last two transactions within last hour
+              returnObject.assets[i - 1].price = (assets[i].dailyVolume > 1000) ? returnObject.assets[i - 1].price : assets[i].medianFeed;
+              returnObject.assets[i - 1].price = (assets[i].current_share_supply > 0) ? returnObject.assets[i - 1].price : assets[i].medianFeed;
+              returnObject.assets[i - 1].supply = assets[i].current_share_supply;
+              returnObject.assets[i - 1].volume24h = assets[i].dailyVolume;
+
+              if (assets[i].lastDate < lastHour) {
+                returnObject.assets[i - 1].price = assets[i].medianFeed;
+              }
+
+            }
+          }
+
+          returnObject.units = {
+            price: 'ASSET/BTS',
+            supply: 'ASSET',
+            'volume24h': 'BTS'
+          };
+
+          return res.jsonp(")]}',\n" + JSON.stringify(returnObject));
         } else {
           return res.status(404).send();
         }
@@ -315,7 +403,7 @@ module.exports = function(db, app, apicache) {
     });
   });
 
-  app.get('/v2/pricehistory/:symbol', function(req, res) {
+  app.get('/v2/pricehistory/:symbol', apicache('30 seconds'),function(req, res) {
     priceHistoryCollectionv2.findOne({
       symbol: req.params.symbol
     }).success(function(result) {
@@ -330,7 +418,7 @@ module.exports = function(db, app, apicache) {
     });
   });
 
-  app.get('/v1/feedstats/:symbol', function(req, res) {
+  app.get('/v1/feedstats/:symbol', apicache('60 seconds'), function(req, res) {
 
     feedDeviationCollectionv2.find({}, {
       fields: {
@@ -368,37 +456,39 @@ module.exports = function(db, app, apicache) {
 
   });
 
-  app.get('/v3/pricehistory/:symbol/:query', function(req, res) {
+  app.get('/v3/pricehistory/:symbol/:query', apicache('30 seconds'), function(req, res) {
     var query = req.params.query;
+    console.log(req.params.query);
     try {
       query = JSON.parse(query);
     } catch (err) {
-      console.log('v3/pricehistory error:',err);
-      query.start = 'error';
+      console.log('v3/pricehistory error:', err);
+      query.days = 'error';
       // return res.status(500).send();
     }
 
-    var start = !isNaN(new Date(query.start)) ? new Date(query.start) : 0;
-    var end = !isNaN(new Date(query.end)) ? new Date(query.end) : new Date();
+    var start = new Date();
+    start.setDate(start.getDate()-query.days);
+    var end = new Date();
 
     console.log('start:', start);
-    console.log('end:', end);
+    // console.log('end:', end);
 
-    console.log({
-      $gte: start.getTime(),
-      $lte: end.getTime(),
-      symbol: req.params.symbol
-    });
+    // console.log({
+    //   $gte: start.getTime(),
+    //   $lte: end.getTime(),
+    //   symbol: req.params.symbol
+    // });
 
-    priceHistoryCollection.col.aggregate({
+    priceHistoryCollectionv2.col.aggregate({
       $match: {
         symbol: req.params.symbol
       }
     }, {
-      $unwind: "$history"
+      $unwind: "$base.BTS"
     }, {
       $match: {
-        "history.timestamp": {
+        "base.BTS.timestamp": {
           $gte: start.getTime(),
           $lte: end.getTime()
         }
@@ -407,13 +497,14 @@ module.exports = function(db, app, apicache) {
       $group: {
         _id: '$_id',
         list: {
-          $push: '$history'
+          $push: '$base.BTS'
         }
       }
     }, function(error, result) {
-      console.log('v3/pricehistory error:', error);
-      console.log('result length:', result.length);
-
+      if (error) {
+        console.log('v3/pricehistory error:', error);
+      }
+      // console.log('result length:', result.length);
       if (!error && result.length > 0 && result[0].list) {
         var returnHistory = reduceHistory(result[0].list);
         return res.jsonp(JSON.stringify(returnHistory));
@@ -1450,7 +1541,7 @@ module.exports = function(db, app, apicache) {
         Math.round(precision * 1 / array[i].closing_price) / precision
       ]);
       returnArray.volume.push([array[i].timestamp,
-        Math.round(array[i].volume * 100) / 100
+        Math.round((array[i].volume / config.basePrecision) * 100) / 100
       ]);
     }
     return returnArray;

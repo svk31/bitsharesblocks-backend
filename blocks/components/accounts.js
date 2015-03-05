@@ -11,7 +11,7 @@ var accountsCollection = db.get('accounts');
 var blocksCollection = db.get('blocks');
 
 accountsCollection.ensureIndex({
-  name: 1
+  isSub: 1
 });
 // FUNCTIONS
 
