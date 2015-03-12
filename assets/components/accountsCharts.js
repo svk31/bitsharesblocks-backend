@@ -121,15 +121,12 @@ function accountsChartData(id) {
 
 function launchUniqueAccounts() {
 
-  // uniqueAccountsCollection.remove({_id:{$gt:0}});
-  // uniqueIDSCollection.remove({_id:{$gt:0}});
-  
   uniqueAccountsCollection.findOne({}, {
     sort: {
       _id: -1
     }
   }).success(function(result) {
-    // console.log(result);
+    console.log(result);
     if (result === null) {
       transactionsCollection.findOne({
           types: "account_register"
@@ -137,6 +134,9 @@ function launchUniqueAccounts() {
           fields: {
             transactions: 1,
             reg_date_ISO: 1
+          },
+          sort: {
+            _id: 1
           }
         })
         .success(function(result) {
@@ -163,7 +163,7 @@ function launchUniqueAccounts() {
       nextDay.setMinutes(0);
       nextDay.setSeconds(0);
       nextDay.setDate(nextDay.getDate() + 2);
-      console.log('min date:',startDay,'upper date:',nextDay);
+      console.log('min date:', startDay, 'upper date:', nextDay);
       uniqueAccounts(startDay, nextDay, result);
     }
   });
@@ -210,7 +210,7 @@ function uniqueAccounts(date, nextDay, previous) {
                   }
                   break;
                 }
-                
+
               }
             }
           }

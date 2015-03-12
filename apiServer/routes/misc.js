@@ -22,6 +22,7 @@ module.exports = function(db, app, maintenance, hardFork, apicache) {
   var genesisBTSXCollection = db.get('genesisBTSX');
   var supplyCollection = db.get('supply');
   var uniqueAccountsCollection = db.get('uniqueAccounts');
+  var metaMarketsCollection = db.get('metaX');
 
   var Q = require('q');
 
@@ -269,7 +270,8 @@ module.exports = function(db, app, maintenance, hardFork, apicache) {
           timestampISO: {
             $gte: startDay
           }
-        })
+        }),
+        metaMarketsCollection.findOne()
       ])
       .then(function(results) {
         if (results[0] && results[1] && results[2] && results[3]) {
@@ -277,6 +279,7 @@ module.exports = function(db, app, maintenance, hardFork, apicache) {
           var missed = results[1];
           var newusers = results[2];
           var forks = results[3];
+          var metaMarkets = (results[4]) ? results[4].markets : [];
 
           returnObject = home;
           returnObject.userAssets = home.userAssets;
@@ -287,6 +290,17 @@ module.exports = function(db, app, maintenance, hardFork, apicache) {
           returnObject.maintenance = maintenance;
 
           returnObject.newUsers = newusers;
+
+          returnObject.metaMarket = null;
+
+          if (metaMarkets.length > 0) {
+            for (var i = 0; i < metaMarkets.length; i++) {
+              if ('BitShares' === metaMarkets[i].asset_name) {
+                returnObject.metaMarket = metaMarkets[i];
+                break;
+              }
+            }
+          }
 
           if (forks.length === 0) {
             forksCollection.findOne({}, {

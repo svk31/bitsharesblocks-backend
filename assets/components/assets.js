@@ -59,7 +59,6 @@ function launchAssetUpdate() {
 
       return assetInfo('recent', ops).then(function(result, ops) {
         _assetRunningRecent = !result.done;
-        console.log('_assetRunningRecent:', _assetRunningRecent);
         if (_debug) {
           // console.log(result);
           console.log('RECENTLY USED ASSETS: Time taken: ', (result.end - result.start) / 1000, 'seconds');
@@ -412,7 +411,6 @@ function updateAsset(asset, baseAsset, oldAsset) {
             entry.timestampOriginal = entry.timestamp;
             entry.timestamp = utils.get_ISO_date(entry.timestamp).getTime();
             entry.order /= 100000;
-
           });
 
           // Calculate daily volume, find recent prices
@@ -478,6 +476,8 @@ function updateAsset(asset, baseAsset, oldAsset) {
             }
           });
 
+          
+
           // Set volume weighted average prices
           oldAsset.base[baseAsset].vwap = sumPrices / oldAsset.base[baseAsset].dailyVolume || oldAsset.base[baseAsset].medianFeed;
           oldAsset.base[baseAsset].vwapHalf = sumPricesHalfDay / halfDayVolume || oldAsset.base[baseAsset].medianFeed;
@@ -495,6 +495,8 @@ function updateAsset(asset, baseAsset, oldAsset) {
             oldAsset.lastPrice = lastPrices / lastVolume || 0;
             oldAsset.lastDate = lastDate;
             oldAsset.initialized = true;
+
+            oldAsset.lastOrder = (oldAsset.base[baseAsset].order_history.length > 0) ? oldAsset.base[baseAsset].order_history[0].ask_price.ratio * priceRatio : 0;
 
             // Set current price
             currentPrice = lastPrices / lastVolume;

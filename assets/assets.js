@@ -3,6 +3,9 @@
 const config = require('../config.json');
 console.log('Launching asset collection scripts at port:', config.rpc_port);
 
+// DB
+// var db = require('monk')('localhost/' + config.database);
+
 // COMPONENTS
 var feeds = require('./components/feeds');
 var assets = require('./components/assets');
@@ -21,6 +24,7 @@ setInterval(accountsChart.update, 1000 * 60 * 30);
 setInterval(accountsChart.updateUnique, 1000 * 60 * 30);
 setInterval(price.update, 1000 * 60 * 30);
 setInterval(supply.update, 1000 * 60 * 30);
+setInterval(price.updateMetaX, 1000 * 30);
 
 setInterval(function() {
   trxChart.update('hourly', 0);
@@ -35,6 +39,6 @@ setInterval(function() {
 }, 1000 * 60 * 60 * 24);
 
 // SINGLE LAUNCH
-// accountsChart.updateUnique();
+// trxChart.update('hourly', 0);
 // assets.updateAll();
 

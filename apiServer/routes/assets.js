@@ -6,6 +6,7 @@ module.exports = function(db, app, apicache) {
   var cors = require('cors');
 
   var config = require('../../config.json');
+  var request = require('request');
 
   // VARIABLES
   var assetsCollection = db.get('assets');
@@ -26,7 +27,7 @@ module.exports = function(db, app, apicache) {
   var feedDeviationCollection = db.get('feedsHistory');
   var feedDeviationCollectionv2 = db.get('feedsHistory_v2');
   var feedsCollection = db.get('feeds');
-
+  var metaMarketsCollection = db.get('metaX');
 
   // ROUTES
   app.get('/v1/cmc', cors(), function(req, res) {
@@ -403,7 +404,7 @@ module.exports = function(db, app, apicache) {
     });
   });
 
-  app.get('/v2/pricehistory/:symbol', apicache('30 seconds'),function(req, res) {
+  app.get('/v2/pricehistory/:symbol', apicache('30 seconds'), function(req, res) {
     priceHistoryCollectionv2.findOne({
       symbol: req.params.symbol
     }).success(function(result) {
@@ -468,7 +469,7 @@ module.exports = function(db, app, apicache) {
     }
 
     var start = new Date();
-    start.setDate(start.getDate()-query.days);
+    start.setDate(start.getDate() - query.days);
     var end = new Date();
 
     console.log('start:', start);
@@ -615,6 +616,7 @@ module.exports = function(db, app, apicache) {
             'current_share_supply': 1,
             'dailyVolume': 1,
             'collected_fees': 1,
+            'lastOrder': 1
           },
           sort: {
             '_id': 1
@@ -673,7 +675,8 @@ module.exports = function(db, app, apicache) {
           'issuer_account_id': 1,
           'current_share_supply': 1,
           'dailyVolume': 1,
-          'vwap': 1
+          'vwap': 1,
+          'lastOrder': 1
         }
       })
       .success(function(userassets) {
@@ -711,7 +714,8 @@ module.exports = function(db, app, apicache) {
             'current_share_supply': 1,
             'dailyVolume': 1,
             'vwap': 1,
-            'lastPrice': 1
+            'lastPrice': 1,
+            'precision': 1
           }
         }),
         btsxPriceCollection.findOne({}, {
@@ -1273,7 +1277,8 @@ module.exports = function(db, app, apicache) {
           fields: {
             medianFeed: 1
           }
-        })
+        }),
+        metaMarketsCollection.findOne()
       ])
       .then(function(results) {
         if (results[0]) {
@@ -1287,6 +1292,7 @@ module.exports = function(db, app, apicache) {
           asset.covers = results[0].base.covers || [];
           asset.order_history = results[0].base.order_history || [];
           asset.medianFeed = (results[1] !== null) ? results[1].medianFeed : 0;
+          var metaMarkets = (results[2]) ? results[2].markets : [];
           delete asset.base;
           asset = results[0];
           asset.sum = {};
@@ -1306,6 +1312,17 @@ module.exports = function(db, app, apicache) {
 
           if (asset.shorts !== undefined && asset.shorts !== null) {
             asset.shorts = reduceShorts(asset.shorts, false);
+          }
+
+          asset.metaMarket = null;
+
+          if (metaMarkets.length > 0) {
+            for (var i = 0; i < metaMarkets.length; i++) {
+              if ('bit' + asset.symbol === metaMarkets[i].asset_name) {
+                asset.metaMarket = metaMarkets[i];
+                break;
+              }
+            }
           }
 
           return res.jsonp(")]}',\n" + JSON.stringify(asset));

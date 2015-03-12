@@ -8,6 +8,7 @@ var request = require('request');
 var db = require('monk')('localhost/' + config.database);
 var blocksCollection = db.get('blocks');
 var btsPriceCollection = db.get('btsxPrice');
+var metaMarketsCollection = db.get('metaX');
 
 // FUNCTIONS 
 
@@ -48,6 +49,43 @@ function fetchPrice() {
   });
 }
 
+function getMetaMarkets() {
+  request.get('https://metaexchange.info/api/1/getAllMarkets', function(error, response, body) {
+    if (!error && response) {
+      var _metaMarkets = JSON.parse(response.body);
+
+      metaMarketsCollection.update({
+          _id: 1
+        }, {
+          _id: 1,
+          markets: _metaMarkets
+        }, {
+          upsert: true
+        }).success(function(result) {
+          // console.log('wrote meta collection');
+        })
+        .error(function(err) {
+          console.log('meta update error:', err);
+        });
+    } else {
+      metaMarketsCollection.update({
+          _id: 1
+        }, {
+          _id: 1,
+          markets: []
+        }, {
+          upsert: true
+        }).success(function(result) {
+          console.log('metaX api error, wrote blank meta collection', error);
+        })
+        .error(function(err) {
+          console.log('meta update error:', err);
+        });
+    }
+  });
+}
+
 module.exports = {
-  update: fetchPrice
+  update: fetchPrice,
+  updateMetaX: getMetaMarkets
 };
