@@ -40,14 +40,23 @@ if (setIndex) {
 		reg_date_ISO: 1
 	});
 	transactionsCollection.ensureIndex({
-		short_ids_1: 1
+		short_ids: 1
 	});
 	transactionsCollection.ensureIndex({
-		full_ids_1: 1
+		full_ids: 1
 	});
 	transactionsCollection.ensureIndex({
 		reg_date_ISO: 1,
 		types: 1
+	});
+
+	transactionsCollection.ensureIndex({
+		types: 1,
+		_id: -1
+	});
+
+	transactionsCollection.ensureIndex({
+		"burns.0": 1
 	});
 
 	transactionsCollection.ensureIndex({

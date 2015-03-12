@@ -30,7 +30,8 @@ if (setIndex) {
 var _currentBlock = 600000;
 var _assetRunningMarket = false;
 var _assetRunningUser = false;
-var _assetRunning = false;
+var _assetRunningRecent = false;
+var _assetRunningAll = false;
 var _debug = false;
 var _lastUpdateBlock = 1;
 
@@ -50,14 +51,15 @@ function getLatestBlock() {
 function launchAssetUpdate() {
 
   utils.redisGet('marketOps').then(function(ops) {
-    // console.log(ops);
+    console.log('** RECENT | all:',_assetRunningAll,'recent:',_assetRunningRecent);
 
-    if (!_assetRunning) {
-      _assetRunning = true;
+    if (!_assetRunningRecent && !_assetRunningAll) {
+      _assetRunningRecent = true;
       console.log('** UPDATING RECENTLY USED ASSETS **');
 
       return assetInfo('recent', ops).then(function(result, ops) {
-        _assetRunning = !result.done;
+        _assetRunningRecent = !result.done;
+        console.log('_assetRunningRecent:', _assetRunningRecent);
         if (_debug) {
           // console.log(result);
           console.log('RECENTLY USED ASSETS: Time taken: ', (result.end - result.start) / 1000, 'seconds');
@@ -72,11 +74,12 @@ function launchAssetUpdate() {
 }
 
 function updateAll() {
-  if (!_assetRunning) {
-    _assetRunning = true;
+  console.log('** ALL | all:',_assetRunningAll,'recent:',_assetRunningRecent);
+  if (!_assetRunningAll && !_assetRunningRecent) {
+    _assetRunningAll = true;
     console.log('** UPDATING ALL ASSETS **');
     return assetInfo('all').then(function(result) {
-      _assetRunning = !result.done;
+      _assetRunningAll = !result.done;
       if (_debug) {
         // console.log(result);
         console.log('ALL ASSETS: Time taken: ', (result.end - result.start) / 1000, 'seconds');
@@ -88,23 +91,24 @@ function updateAll() {
   }
 }
 
-function updateMarketAssets() {
-  if (!_assetRunningMarket) {
-    _assetRunningMarket = true;
-    console.log('** UPDATING MARKET ASSETS **');
-    return assetInfo('market').then(function(result) {
-      _assetRunningMarket = !result.done;
-      if (_debug) {
-        console.log('Market Assets Time taken: ', (result.end - result.start) / 1000, 'seconds');
-      }
-      console.log('** FINISHED UPDATING MARKET ASSETS **');
-    });
-  } else {
-    return console.log('** MARKET ASSETS ALREADY RUNNING**');
-  }
-}
+// function updateMarketAssets() {
+//   if (!_assetRunningMarket) {
+//     _assetRunningMarket = true;
+//     console.log('** UPDATING MARKET ASSETS **');
+//     return assetInfo('market').then(function(result) {
+//       _assetRunningMarket = !result.done;
+//       if (_debug) {
+//         console.log('Market Assets Time taken: ', (result.end - result.start) / 1000, 'seconds');
+//       }
+//       console.log('** FINISHED UPDATING MARKET ASSETS **');
+//     });
+//   } else {
+//     return console.log('** MARKET ASSETS ALREADY RUNNING**');
+//   }
+// }
 
 function assetInfo(type, selections) {
+  var deferred = Q.defer();
 
   var assetSelection = selections;
 
@@ -119,15 +123,22 @@ function assetInfo(type, selections) {
   }
 
   if (selections && recentUpdates === false) {
-    _assetRunning = false;
-    return false;
+    // if (_assetRunningRecent) {
+    //   _assetRunningRecent = false;
+    // }
+    // if (_assetRunningRecent) {
+    //   _assetRunningRecent = false;
+    // }
+    deferred.resolve({
+      done: true
+    });
 
   } else {
     var start = Date.now();
 
     var i, j;
     var updatePromises = [];
-    var deferred = Q.defer();
+
     var delegatesPromise = [];
 
     Q.all([
@@ -280,15 +291,18 @@ function assetInfo(type, selections) {
         console.log(err);
         if (marketBoolean) {
           _assetRunningMarket = false;
-        } else if (_assetRunning) {
-          _assetRunning = false;
+        } else if (_assetRunningRecent) {
+          _assetRunningRecent = false;
+        } else if (_assetRunningAll) {
+          _assetRunningAll = false;
         } else {
           _assetRunningUser = false;
         }
       });
 
-    return deferred.promise;
+
   }
+  return deferred.promise;
 }
 
 function updateAsset(asset, baseAsset, oldAsset) {
@@ -584,6 +598,5 @@ function updateAsset(asset, baseAsset, oldAsset) {
 
 module.exports = {
   launchAssetUpdate: launchAssetUpdate,
-  updateAll: updateAll,
-  updateMarketAssets: updateMarketAssets
+  updateAll: updateAll
 };

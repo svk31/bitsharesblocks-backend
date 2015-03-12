@@ -1,7 +1,7 @@
 'use strict';
 
 const config = require('../config.json');
-console.log('Lanching asset collection scripts at port:', config.rpc_port);
+console.log('Launching asset collection scripts at port:', config.rpc_port);
 
 // COMPONENTS
 var feeds = require('./components/feeds');

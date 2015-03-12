@@ -165,10 +165,6 @@ module.exports = function(db, app, apicache) {
         limit: 15,
         sort: {
           _id: -1
-        },
-        fields: {
-          transactions: 1,
-          types: 1
         }
       }).success(function(blocks) {
         if (blocks) {
@@ -205,11 +201,7 @@ module.exports = function(db, app, apicache) {
     };
 
     options = {
-      limit: 15,
-      fields: {
-        transactions: 1,
-        types: 1
-      }
+      limit: 15
     };
 
     sortQuery = req.params.sort;
