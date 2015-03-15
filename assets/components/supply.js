@@ -34,8 +34,8 @@ function assetSupply() {
   }).success(function(assets) {
     if (assets) {
       for (var i = 0; i < assets.length; i++) {
-        // promises.push(updateSupply(assets[i], assets[i].issuer_account_id === -2));
-        promises.push(updateSupply(assets[i], false));
+        promises.push(updateSupply(assets[i], assets[i].issuer_account_id === -2));
+        // promises.push(updateSupply(assets[i], false));
       }
       console.log('Asset count: ', promises.length);
       Q.all(promises).then(function(result) {

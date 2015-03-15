@@ -24,7 +24,7 @@ module.exports = function(db, app, versionData, versionData_v2, maintenance, api
 
   var config = require('../../config_play.json');
   var basePrecision = config.basePrecision;
-  var votesCutoff = -1;
+  var votesCutoff = 100000;
 
   // ROUTES
   app.get('/v1/delegateNames', apicache('90 seconds'), function(req, res) {

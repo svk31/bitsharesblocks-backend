@@ -5,8 +5,8 @@ module.exports = function(db, app, maintenance, hardFork, apicache) {
   // VARIABLES
   var moment = require('moment');
 
-  // var forkSupplyBTS = 2498764341.60685;
-  var forkSupplyBTS = 2000000000.00000;
+  var forkSupplyBTS = 2498764341.60685;
+  // var forkSupplyBTS = 2000000000.00000;
 
   var transactionChartCollection = db.get('trxCharts');
   var transactionChartCollectionHour = db.get('trxChartsHour');
