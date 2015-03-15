@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('..config.json');
+const config = require('../config.json');
 console.log('Lanching block collection scripts at port:', config.rpc_port);
 
 // COMPONENTS

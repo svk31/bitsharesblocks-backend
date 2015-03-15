@@ -22,7 +22,7 @@ module.exports = function(db, app, versionData, versionData_v2, maintenance, api
     'public_data': 1
   };
 
-  var config = require('../..config.json');
+  var config = require('../../config.json');
   var basePrecision = config.basePrecision;
   var votesCutoff = 100000;
 
