@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../config.json');
+const config = require('../config_play.json');
 console.log('Lanching block collection scripts at port:', config.rpc_port);
 
 // COMPONENTS
@@ -19,7 +19,7 @@ setInterval(home.blockchainUpdate, 1000 * 60 * 10);
 // SINGLE LAUNCH
 
 blocks.update();
-// updateAccounts();
+home.update();
 
 
 

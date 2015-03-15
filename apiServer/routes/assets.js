@@ -5,7 +5,9 @@ module.exports = function(db, app, apicache) {
   var Q = require('q');
   var cors = require('cors');
 
-  var config = require('../../config.json');
+  var config = require('../../config_play.json');
+  var _baseUnit = config.baseSymbol;
+  console.log('** USING BASE ASSET:', _baseUnit);
   var request = require('request');
 
   // VARIABLES
@@ -408,8 +410,8 @@ module.exports = function(db, app, apicache) {
     priceHistoryCollectionv2.findOne({
       symbol: req.params.symbol
     }).success(function(result) {
-      if (result && result.base && result.base.BTS) {
-        var returnHistory = reduceHistory(result.base.BTS);
+      if (result && result.base && result.base[_baseUnit]) {
+        var returnHistory = reduceHistory(result.base[_baseUnit]);
         return res.jsonp(JSON.stringify(returnHistory));
       } else {
         return res.jsonp(")]}',\n" + JSON.stringify({
@@ -480,25 +482,26 @@ module.exports = function(db, app, apicache) {
     //   $lte: end.getTime(),
     //   symbol: req.params.symbol
     // });
+    var matchKey = "base." + _baseUnit + ".timestamp";
+    var matchQuery = {};
+    matchQuery[matchKey] = {
+      $gte: start.getTime(),
+      $lte: end.getTime()
+    };
 
     priceHistoryCollectionv2.col.aggregate({
       $match: {
         symbol: req.params.symbol
       }
     }, {
-      $unwind: "$base.BTS"
+      $unwind: "$base." + _baseUnit
     }, {
-      $match: {
-        "base.BTS.timestamp": {
-          $gte: start.getTime(),
-          $lte: end.getTime()
-        }
-      }
+      $match: matchQuery
     }, {
       $group: {
         _id: '$_id',
         list: {
-          $push: '$base.BTS'
+          $push: "$base." + _baseUnit
         }
       }
     }, function(error, result) {

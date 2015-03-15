@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../../config.json');
+const config = require('../../config_play.json');
 var utils = require('../../utils/utils.js');
 
 var Q = require('q');
@@ -124,7 +124,7 @@ function homeUpdate() {
       console.log('trxCount:', homeInfo.transactionCount);
       homeInfo.missedCount = result[14];
       homeInfo.unclaimed = Math.round(result[15].amount / config.basePrecision);
-      homeInfo.nrAssetTrx = result[16].totalAssetTrx;
+      homeInfo.nrAssetTrx = (result[16]) ? result[16].totalAssetTrx: 0;
 
       var collaterals = result[17];
 

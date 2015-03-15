@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../../config.json');
+const config = require('../../config_play.json');
 var utils = require('../../utils/utils.js');
 
 var Q = require('q');
@@ -40,8 +40,7 @@ function latencyLauncher() {
 }
 
 function updateLatencies(ii, delegates, latencyObject) {
-  if (ii < _activeDelegatesCount) {
-
+  if (ii < _activeDelegatesCount && delegates[ii]) {
     var limitBlocks = 200;
     var latencies = {};
     var id = parseInt(delegates[ii].id);

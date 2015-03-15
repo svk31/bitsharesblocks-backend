@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../../config.json');
+const config = require('../../config_play.json');
 var utils = require('../../utils/utils.js');
 
 var Q = require('q');
@@ -11,6 +11,8 @@ var assetsCollection = db.get('assets_v2');
 var delegatesListCollection = db.get('delegatesList');
 var feedsCollection = db.get('feeds');
 var priceHistoryCollection = db.get('priceHistory_v2');
+var _baseUnit = config.baseSymbol;
+console.log('** USING BASE ASSET:',_baseUnit);
 
 // DB INDEX DEFINITIONS
 var setIndex = true;
@@ -249,13 +251,13 @@ function assetInfo(type, selections) {
                   oldAsset = existingAssets[i];
                   found = true;
                   console.log('found match:', asset.symbol, '==', existingAssets[i].symbol);
-                  updatePromises.push(updateAsset(asset, 'BTS', oldAsset));
+                  updatePromises.push(updateAsset(asset, _baseUnit, oldAsset));
                 }
 
               }
               if (!found) {
                 console.log('new asset:', asset.symbol);
-                updatePromises.push(updateAsset(asset, 'BTS', asset));
+                updatePromises.push(updateAsset(asset, _baseUnit, asset));
               }
 
               break;
@@ -269,7 +271,7 @@ function assetInfo(type, selections) {
                     oldAsset = existingAssets[i];
                   }
                 }
-                updatePromises.push(updateAsset(asset, 'BTS', oldAsset));
+                updatePromises.push(updateAsset(asset, _baseUnit, oldAsset));
               }
               break;
           }
@@ -314,7 +316,7 @@ function updateAsset(asset, baseAsset, oldAsset) {
     coversPromise = [];
   // console.log('oldAsset:',oldAsset);
   // console.log('asset:',asset);
-  if (asset.issuer_account_id === -2 && baseAsset === 'BTS') {
+  if (asset.issuer_account_id === -2 && baseAsset === _baseUnit) {
     medianFeedsPromise = feedsCollection.findOne({
       symbol: asset.symbol
     }, {
@@ -487,7 +489,7 @@ function updateAsset(asset, baseAsset, oldAsset) {
 
           oldAsset.base[baseAsset].initialized = true;
 
-          if (baseAsset === 'BTS') { // For ease of use in api calls, set BTS values to root
+          if (baseAsset === _baseUnit) { // For ease of use in api calls, set BTS values to root
             oldAsset.medianFeed = results[5].medianFeed || 0;
             oldAsset.dailyVolume = oldAsset.base[baseAsset].dailyVolume;
             oldAsset.status = status;
@@ -562,7 +564,7 @@ function updateAsset(asset, baseAsset, oldAsset) {
       if (!oldAsset.base[baseAsset]) {
         oldAsset.base[baseAsset] = {};
       }
-      if (baseAsset === 'BTS') {
+      if (baseAsset === _baseUnit) {
         oldAsset.status = {};
         oldAsset.status = {};
         oldAsset.status.bid_depth = 0;

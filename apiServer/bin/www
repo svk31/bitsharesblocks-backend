@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Include the cluster module
 var cluster = require('cluster');
-var config = require('../../config.json');
+var config = require('../../config_play.json');
 var http = require('http');
 var https = require('https');
 var fs = require('fs');

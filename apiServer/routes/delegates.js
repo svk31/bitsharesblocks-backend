@@ -22,8 +22,9 @@ module.exports = function(db, app, versionData, versionData_v2, maintenance, api
     'public_data': 1
   };
 
-  var basePrecision = 100000;
-  var votesCutoff = 100000;
+  var config = require('../../config_play.json');
+  var basePrecision = config.basePrecision;
+  var votesCutoff = -1;
 
   // ROUTES
   app.get('/v1/delegateNames', apicache('90 seconds'), function(req, res) {
@@ -177,6 +178,11 @@ module.exports = function(db, app, versionData, versionData_v2, maintenance, api
 
           returnObject.delegates = results[0];
           returnObject.ranks = results[1][0];
+          if (!returnObject.ranks) {
+            returnObject.ranks = {};
+            returnObject.ranks.dayChange = {};
+            returnObject.ranks.weekChange = {};
+          }
           returnObject.latencies = results[2];
           returnObject.activeFeeds = results[3];
 
