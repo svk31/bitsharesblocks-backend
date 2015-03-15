@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../config_play.json');
+const config = require('..config.json');
 var moment = require('moment');
 var jayson = require('jayson');
 var Q = require('q');
