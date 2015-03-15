@@ -13,6 +13,19 @@ var blocksCollection = db.get('blocks');
 accountsCollection.ensureIndex({
   isSub: 1
 });
+
+accountsCollection.ensureIndex({
+  reg_date_ISO: 1
+});
+
+accountsCollection.ensureIndex({
+  _id:1,
+  reg_date_ISO: 1
+});
+
+accountsCollection.ensureIndex({
+  name: 1
+});
 // FUNCTIONS
 
 function updateAccounts() {

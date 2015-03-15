@@ -4,3 +4,5 @@ blocks/node_modules
 delegates/node_modules
 utils/node_modules
 config.json
+config_play.json
+config_dvs.json
