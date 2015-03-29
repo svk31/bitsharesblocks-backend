@@ -37,8 +37,8 @@ module.exports = function(db, app, apicache) {
   app.get('/v1/accountsbynr/:nr', apicache('2 minutes'), function(req, res) {
     if (req.params.nr === '-2') {
       return res.jsonp(")]}',\n" + JSON.stringify('MARKET'));
-    } else if (req.params.nr < -2) {
-      return res.status(404).send();
+    } else if (req.params.nr < 0) {
+      req.params.nr = Math.abs(req.params.nr);
     } 
     // console.log('accountsbynr/:nr: ' + req.params.nr);
     accountsCollection.findOne({

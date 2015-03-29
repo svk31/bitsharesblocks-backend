@@ -43,7 +43,7 @@
   var versionData_v2 = {
     major: 0,
     minor: 8,
-    patch: 0,
+    patch: 1,
     premajor: 0
   };
 
