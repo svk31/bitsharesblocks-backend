@@ -12,7 +12,7 @@ var delegatesListCollection = db.get('delegatesList');
 var feedsCollection = db.get('feeds');
 var priceHistoryCollection = db.get('priceHistory_v2');
 var _baseUnit = config.baseSymbol;
-console.log('** USING BASE ASSET:',_baseUnit);
+console.log('** USING BASE ASSET:', _baseUnit);
 
 // DB INDEX DEFINITIONS
 var setIndex = true;
@@ -36,6 +36,7 @@ var _assetRunningRecent = false;
 var _assetRunningAll = false;
 var _debug = false;
 var _lastUpdateBlock = 1;
+var _blockLag = 12;
 
 // FUNCTIONS
 getLatestBlock();
@@ -53,7 +54,7 @@ function getLatestBlock() {
 function launchAssetUpdate() {
 
   utils.redisGet('marketOps').then(function(ops) {
-    console.log('** RECENT | all:',_assetRunningAll,'recent:',_assetRunningRecent);
+    console.log('** RECENT | all:', _assetRunningAll, 'recent:', _assetRunningRecent);
 
     if (!_assetRunningRecent && !_assetRunningAll) {
       _assetRunningRecent = true;
@@ -75,7 +76,7 @@ function launchAssetUpdate() {
 }
 
 function updateAll() {
-  console.log('** ALL | all:',_assetRunningAll,'recent:',_assetRunningRecent);
+  console.log('** ALL | all:', _assetRunningAll, 'recent:', _assetRunningRecent);
   if (!_assetRunningAll && !_assetRunningRecent) {
     _assetRunningAll = true;
     console.log('** UPDATING ALL ASSETS **');
@@ -154,6 +155,7 @@ function assetInfo(type, selections) {
 
         var assets = results[0];
         var existingAssets = results[1];
+
         var assetCount = assets.length,
           updateCounter = 0;
 
@@ -169,29 +171,33 @@ function assetInfo(type, selections) {
           // Loop over selections
           assetSelection.forEach(function(block, index) {
             // If an asset has been created we will update it
-            if (block._id > (_lastUpdateBlock - 15) && block.assetCreate > 0) {
+            if (block._id > (_lastUpdateBlock - _blockLag) && block.assetCreate > 0) {
               for (var newAssetID in block.newAssets) {
                 console.log('NEW ASSET ID:', newAssetID);
                 combinations[newAssetID] = [];
-                combinations[newAssetID].push(0);
+                combinations[newAssetID].push("0");
               }
             }
             // If an asset has had transactions we will add it
-            if (block._id > (_lastUpdateBlock - 15) && block.assetCount > 0) {
-              console.log('Asset updates:', block._id, ' > ', _lastUpdateBlock - 15);
+            if (block._id > (_lastUpdateBlock - _blockLag) && block.assetCount > 0) {
+              console.log('Asset updates:', block._id, ' > ', _lastUpdateBlock - _blockLag);
               for (var base in block.assets) {
                 block.assets[base].forEach(function(quote) {
                   var exists = false;
-                  if (!combinations[quote]) {
-                    combinations[quote] = [];
-                  }
-                  for (var i = 0; i < combinations[quote].length; i++) {
-                    if (combinations[quote][i] === base) {
-                      exists = true;
+                  if (base === 0 || base === "0") {
+                    if (!combinations[quote]) {
+                      combinations[quote] = [];
                     }
-                  }
-                  if (!exists) {
-                    combinations[quote].push(base);
+                    for (var i = 0; i < combinations[quote].length; i++) {
+                      if (combinations[quote][i] === base) {
+                        exists = true;
+                      }
+                    }
+                    if (!exists) {
+                      if (base === "0") {
+                        combinations[quote].push(base);
+                      }
+                    }
                   }
 
                 });
@@ -236,7 +242,6 @@ function assetInfo(type, selections) {
                     // console.log(asset);
                     updatePromises.push(updateAsset(asset, assetSymbols[base], oldAsset));
                   }
-
 
                   // });
                 }
@@ -285,20 +290,32 @@ function assetInfo(type, selections) {
             });
           })
           .catch(function(error) {
-            // console.log(error);
+            console.log('update failed:', error);
+            if (marketBoolean) {
+              _assetRunningMarket = false;
+            } else if (_assetRunningRecent) {
+              _assetRunningRecent = false;
+            } else if (_assetRunningAll) {
+              _assetRunningAll = false;
+            } else {
+              _assetRunningUser = false;
+            }
           });
       })
       .catch(function(err) {
-        console.log(err);
-        if (marketBoolean) {
-          _assetRunningMarket = false;
-        } else if (_assetRunningRecent) {
-          _assetRunningRecent = false;
-        } else if (_assetRunningAll) {
-          _assetRunningAll = false;
-        } else {
-          _assetRunningUser = false;
-        }
+        console.log('Whole thing failed:', err);
+        // if (marketBoolean) {
+        //   _assetRunningMarket = false;
+        // } else if (_assetRunningRecent) {
+        //   _assetRunningRecent = false;
+        // } else if (_assetRunningAll) {
+        //   _assetRunningAll = false;
+        // } else {
+        //   _assetRunningUser = false;
+        // }
+        deferred.resolve({
+          done: true
+        });
       });
 
 
@@ -388,6 +405,9 @@ function updateAsset(asset, baseAsset, oldAsset) {
           oldAsset.maximum_share_supply = asset.maximum_share_supply / asset.precision;
           oldAsset.reg_date_ISO = utils.get_ISO_date(asset.registration_date);
 
+          if (!oldAsset.base[baseAsset].status) {
+            oldAsset.base[baseAsset].status = {};
+          }
           oldAsset.base[baseAsset].status.ask_depth = 0;
           oldAsset.base[baseAsset].status.bid_depth = 0;
 
@@ -478,7 +498,7 @@ function updateAsset(asset, baseAsset, oldAsset) {
             }
           });
 
-          
+
 
           // Set volume weighted average prices
           oldAsset.base[baseAsset].vwap = sumPrices / oldAsset.base[baseAsset].dailyVolume || oldAsset.base[baseAsset].medianFeed;
@@ -550,10 +570,20 @@ function updateAsset(asset, baseAsset, oldAsset) {
             })
             .catch(function(error) {
               console.log(oldAsset.symbol, '/', baseAsset, 'unable to update:', error);
+              deferred.resolve({
+                asset: asset.symbol,
+                time: (Date.now() - start) / 1000,
+                done: true
+              });
             });
         })
         .catch(function(err) {
           console.log(oldAsset.symbol, '/', baseAsset, 'batch of rpc calls failed:', err);
+          deferred.resolve({
+            asset: asset.symbol,
+            time: (Date.now() - start) / 1000,
+            done: true
+          });
         });
     })
     .catch(function(err) {
@@ -595,6 +625,11 @@ function updateAsset(asset, baseAsset, oldAsset) {
         })
         .error(function(err) {
           console.log('failed to write asset:', err);
+          deferred.resolve({
+            asset: oldAsset.symbol,
+            time: (Date.now() - start) / 1000,
+            done: true
+          });
         });
     });
   return deferred.promise;

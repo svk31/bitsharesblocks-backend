@@ -40,7 +40,7 @@ function assetSupply() {
       console.log('Asset count: ', promises.length);
       Q.all(promises).then(function(result) {
         console.log('Supply update done');
-        console.log(result);
+        // console.log(result);
         if (debug) {
           console.log('Supply update Time taken: ', (Date.now() - start) / 1000, 'seconds');
         }
@@ -119,7 +119,7 @@ function fixSupply() {
     for (var i = 0; i < result.supply.length; i++) {
       if (result.supply[i][0] === 1418406820953 && result.supply[i][1] === 2498095109.13434) {
         found = true;
-        console.log('found it, index:', i);
+        // console.log('found it, index:', i);
         break;
       }
     }

@@ -37,12 +37,14 @@ module.exports = function(db, app, apicache) {
   app.get('/v1/accountsbynr/:nr', apicache('2 minutes'), function(req, res) {
     if (req.params.nr === '-2') {
       return res.jsonp(")]}',\n" + JSON.stringify('MARKET'));
-    }
+    } else if (req.params.nr < -2) {
+      return res.status(404).send();
+    } 
     // console.log('accountsbynr/:nr: ' + req.params.nr);
     accountsCollection.findOne({
       '_id': parseInt(req.params.nr, 10)
     }, {}).success(function(account) {
-      if (account !== null) {
+      if (account) {
         // console.log(account);
         return res.jsonp(")]}',\n" + JSON.stringify(account));
       } else {

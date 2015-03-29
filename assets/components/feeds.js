@@ -209,7 +209,7 @@ function feedHistory() {
             asset.base.BTS.order_history.forEach(function(order, index) {
               timestamp = utils.get_ISO_date(order.timestamp);
               if (timestamp > lastHour) {
-                console.log('recent order:', asset.symbol, 'price:', assetRatio * (parseFloat(order.bid_price.ratio) + parseFloat(order.ask_price.ratio)) / 2);
+                // console.log('recent order:', asset.symbol, 'price:', assetRatio * (parseFloat(order.bid_price.ratio) + parseFloat(order.ask_price.ratio)) / 2);
                 foundRecent = true;
                 volumeSum += order.bid_received.amount;
                 priceSum += order.bid_received.amount * assetRatio * (parseFloat(order.bid_price.ratio) + parseFloat(order.ask_price.ratio)) / 2;
@@ -229,7 +229,7 @@ function feedHistory() {
           currentPrice = (asset.current_share_supply > 0) ? currentPrice : asset.medianFeed;
           currentPrice = (asset.dailyVolume > 1000) ? currentPrice : asset.medianFeed;
 
-          console.log(asset.symbol, ': Current price:', currentPrice);
+          // console.log(asset.symbol, ': Current price:', currentPrice);
 
           // console.log(asset.symbol,'VWAP: ',asset.vwap);          
           // if ((Date.now() - asset.last_date) > 1000*60*60) {
@@ -266,10 +266,10 @@ function fixFeedsHistory() {
       _id: 1
     }
   }).success(function(history) {
-    console.log('asset: ', history[21].symbol);
+    // console.log('asset: ', history[21].symbol);
     for (var i = history[22].feed.length-1; i >=0;  i--) {
       if (history[21].feed[i][1] === 0) {
-        console.log('i:', i, 'date:', new Date(history[22].feed[i][0]), 'value:', history[22].feed[i][1]);
+        // console.log('i:', i, 'date:', new Date(history[22].feed[i][0]), 'value:', history[22].feed[i][1]);
         history[21].feed.splice(i,1);
         history[21].currentPrice.splice(i,1);
         history[21].vwap24hrs.splice(i,1);
