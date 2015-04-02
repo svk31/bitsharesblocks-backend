@@ -5,7 +5,7 @@ module.exports = function(db, app, apicache) {
   var Q = require('q');
   var cors = require('cors');
 
-  var config = require('../../config.json');
+  var config = require('../../config_dvs.json');
   var _baseUnit = config.baseSymbol;
   console.log('** USING BASE ASSET:', _baseUnit);
   var request = require('request');

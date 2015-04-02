@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../../config.json');
+const config = require('../../config_dvs.json');
 var utils = require('../../utils/utils.js');
 
 var moment = require('moment');

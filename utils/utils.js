@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../config.json');
+const config = require('../config_dvs.json');
 var moment = require('moment');
 var jayson = require('jayson');
 var Q = require('q');

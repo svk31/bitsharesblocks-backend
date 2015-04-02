@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../config.json');
+const config = require('../config_dvs.json');
 console.log('Launching asset collection scripts at port:', config.rpc_port);
 
 // DB
