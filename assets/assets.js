@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../config.json');
+const config = require('../config_play.json');
 console.log('Launching asset collection scripts at port:', config.rpc_port);
 
 // DB
@@ -39,8 +39,8 @@ setInterval(function() {
 }, 1000 * 60 * 60 * 24);
 
 // SINGLE LAUNCH
-// trxChart.update('weekly', 2);
+trxChart.update('daily', 1);
 // feeds.launchFeedUpdate();
-// price.update();
-assets.launchAssetUpdate();
+supply.update();
+// assets.updateAll();
 

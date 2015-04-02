@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../../config.json');
+const config = require('../../config_play.json');
 var utils = require('../../utils/utils.js');
 
 var Q = require('q');
@@ -175,12 +175,13 @@ function homeUpdate() {
 function securityInfo() {
   console.log('** UPDATING SECURITY INFO **');
   Q.all([
-      utils.rpcCall('blockchain_get_security_state', []),
+      // utils.rpcCall('blockchain_get_security_state', []),
       utils.redisGet('_getInfo')
     ])
     .then(function(results) {
-      var security = results[0];
-      var getInfo = results[1];
+      // var security = results[0];
+      var security = {};
+      var getInfo = results[0];
       security._id = 1;
       security.getInfo = getInfo;
       securityCollection.update({
@@ -190,6 +191,9 @@ function securityInfo() {
       }).success(function(doc) {
         return console.log('** SECURITY UPDATE DONE **');
       });
+    })
+    .catch(function(err) {
+      console.log('** Security update failed:',err);
     });
 }
 

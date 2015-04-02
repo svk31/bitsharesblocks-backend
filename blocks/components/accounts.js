@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../../config.json');
+const config = require('../../config_play.json');
 var utils = require('../../utils/utils.js');
 
 var Q = require('q');
@@ -36,7 +36,7 @@ function updateAccounts() {
     }
   }).success(function(previousAccount) {
     var startAccount = (previousAccount) ? previousAccount._id + 1 : 1;
-    // startAccount = 1; // Forcing restart here
+    startAccount = 1; // Forcing restart here
     return getAccount(startAccount, true).then(function(result) {});
   });
 }

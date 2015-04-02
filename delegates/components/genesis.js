@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../config.json');
+const config = require('../config_play.json');
 
 // db def
 var db = require('monk')('localhost/' + config.database);

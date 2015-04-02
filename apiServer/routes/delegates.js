@@ -22,9 +22,9 @@ module.exports = function(db, app, versionData, versionData_v2, maintenance, api
     'public_data': 1
   };
 
-  var config = require('../../config.json');
+  var config = require('../../config_play.json');
   var basePrecision = config.basePrecision;
-  var votesCutoff = 100000;
+  var votesCutoff = -1;
 
   // ROUTES
   app.get('/v1/delegateNames', apicache('90 seconds'), function(req, res) {

@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../../config.json');
+const config = require('../../config_play.json');
 var utils = require('../../utils/utils.js');
 var Q = require('q');
 

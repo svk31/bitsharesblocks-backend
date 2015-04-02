@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../config.json');
+const config = require('../config_play.json');
 
 var delegates = require('./components/delegates');
 var votes = require('./components/votes');

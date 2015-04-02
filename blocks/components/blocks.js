@@ -1,6 +1,6 @@
 'use strict';
 
-const config = require('../../config.json');
+const config = require('../../config_play.json');
 var utils = require('../../utils/utils.js');
 var accounts = require('./accounts');
 var missed = require('./missingBlocks');
@@ -205,13 +205,12 @@ function updateBlock(blockHeight) {
 								}
 							})
 							.catch(function(error) {
-								console.log('updatePromises error');
-								console.log(error);
+								console.log('updatePromises error', error);
 								deferred.resolve(error);
 							});
 					})
 					.catch(function(error) {
-						console.log(error);
+						console.log("q all error:",error);
 					});
 			});
 	} else {
@@ -253,12 +252,16 @@ function trxLoop(trx, block) {
 		transactions.full_ids.push(transaction[0]);
 		transactions.short_ids.push(transaction[0].substr(0, 8));
 
-		for (var jj = 0; jj < transaction[1].balance.length; jj++) {
-			if (!transactions.fees[transaction[1].balance[jj][0]]) {
-				transactions.fees[transaction[1].balance[jj][0]] = 0;
+		for (var jj = 0; jj < transaction[1].fees_paid.length; jj++) {
+			if (!transactions.fees[transaction[1].fees_paid[jj][0]]) {
+				transactions.fees[transaction[1].fees_paid[jj][0]] = 0;
 			}
-			transactions.fees[transaction[1].balance[jj][0]] += transaction[1].balance[jj][1];
+			transactions.fees[transaction[1].fees_paid[jj][0]] += transaction[1].fees_paid[jj][1];
 		}
+		console.log("I get here");
+		console.log(transaction[1].op_deltas[0]);
+
+		/*
 		for (jj = 0; jj < transaction[1].withdraws.length; jj++) {
 			let withdraws = transaction[1].withdraws[jj];
 			var withdrawnAsset, withdrawnAmount;
@@ -274,6 +277,7 @@ function trxLoop(trx, block) {
 			}
 			transactions.totalvalue[withdrawnAsset] += withdrawnAmount;
 		}
+		*/
 		transactions.transactions[index][1].type = 'transfer';
 
 
