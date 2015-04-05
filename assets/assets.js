@@ -41,6 +41,6 @@ setInterval(function() {
 // SINGLE LAUNCH
 // trxChart.update('weekly', 2);
 // feeds.launchFeedUpdate();
-// price.update();
-assets.launchAssetUpdate();
+supply.update();
+assets.updateAll();
 
