@@ -20,7 +20,8 @@ setInterval(slates.update, 10 * 60000);
 // setInterval(records.update,10*60000);
 
 // SINGLE LAUNCH
-// slates.update();
+latencies.update();
+slates.update();
 
 
 

@@ -39,8 +39,8 @@ setInterval(function() {
 }, 1000 * 60 * 60 * 24);
 
 // SINGLE LAUNCH
-trxChart.update('daily', 1);
+trxChart.update('hourly', 0);
 // feeds.launchFeedUpdate();
-supply.update();
-// assets.updateAll();
+// supply.update();
+assets.updateAll();
 

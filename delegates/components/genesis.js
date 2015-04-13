@@ -4,13 +4,14 @@ const config = require('../config_play.json');
 
 // db def
 var db = require('monk')('localhost/' + config.database);
-var genesisBTSXCollection = db.get('genesisBTSX');
+var genesisCollection = db.get('genesis'+config.baseAsset);
+
 var genesisBTSCollection = db.get('genesisBTS');
 
 // SCRIPTS
 
 function genesisStats() {
-  var genesis = require('../../genesis_bts.json');
+  var genesis = require(config.genesisJSON);
   genesis._id = 1;
   var genesisPrecisionBTSX = config.basePrecision * 5;
   var genesisPrecisionBTS = config.basePrecision * 1000;
@@ -350,6 +351,6 @@ function genesisBTSXStats() {
 }
 
 module.exports = {
-  updateBTS: genesisStats,
+  update: genesisStats,
   updateBTSX: genesisBTSXStats
 };

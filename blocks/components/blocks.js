@@ -99,17 +99,22 @@ function getAllBlocks() {
 				}
 				if (_updateRunning === false) {
 					_updateRunning = true;
-					return updateBlock(lastSavedBlock).then(function(result) {
-						_updateRunning = false;
-					});
+					updateBlock(lastSavedBlock).then(function(result) {
+							console.log(result);
+							_updateRunning = false;
+						})
+						.catch(function(err) {
+							// console.log(err);
+							_updateRunning = false;
+						});
 				} else {
 					return console.log('update blocks already running');
 				}
 			});
 		})
 		.catch(function(error) {
-			console.log(' get block rpc failed:');
-			console.log(error);
+			console.log(' get block rpc failed:', error);
+			_updateRunning = false;
 		});
 }
 
@@ -210,11 +215,11 @@ function updateBlock(blockHeight) {
 							});
 					})
 					.catch(function(error) {
-						console.log("q all error:",error);
+						console.log("q all error:", error);
 					});
 			});
 	} else {
-		deferred.resolve('AT CURRENT BLOCK');
+		deferred.reject("No new blocks found");
 	}
 	return deferred.promise;
 }
@@ -258,16 +263,12 @@ function trxLoop(trx, block) {
 			}
 			transactions.fees[transaction[1].fees_paid[jj][0]] += transaction[1].fees_paid[jj][1];
 		}
-		console.log("I get here");
-		console.log(transaction[1].op_deltas[0]);
-
-		/*
-		for (jj = 0; jj < transaction[1].withdraws.length; jj++) {
-			let withdraws = transaction[1].withdraws[jj];
+		for (jj = 0; jj < transaction[1].op_deltas[0][1].length; jj++) {
+			let withdraws = transaction[1].op_deltas[0][1][jj];
 			var withdrawnAsset, withdrawnAmount;
 
 			withdrawnAsset = (withdraws[1].asset_id) ? withdraws[1].asset_id : withdraws[0];
-			withdrawnAmount = (withdraws[1].amount) ? withdraws[1].amount : withdraws[1];
+			withdrawnAmount = (withdraws[1].amount) ? withdraws[1].amount : Math.abs(withdraws[1]);
 
 			// console.log('withdrawnAsset',withdrawnAsset);
 			// console.log('withdrawnAmount',withdrawnAmount);
@@ -277,7 +278,7 @@ function trxLoop(trx, block) {
 			}
 			transactions.totalvalue[withdrawnAsset] += withdrawnAmount;
 		}
-		*/
+		
 		transactions.transactions[index][1].type = 'transfer';
 
 
