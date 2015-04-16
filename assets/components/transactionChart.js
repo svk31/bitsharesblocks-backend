@@ -25,8 +25,12 @@ var feesChartCollectionWeek = db.get('feesChartsWeek');
 function updateTransactionChart(interval, runnerIndex) {
   var inputs = {};
   var promises = [];
+
+  // Check if an update is already running
   if (_trxChartRunning[runnerIndex] === false) {
     _trxChartRunning[runnerIndex] = true;
+
+    // If no update running, check which type of interval then look for the existing data of that interval
     if (interval === 'hourly') {
       promises.push(transactionChartCollectionHour.findOne({}, {
         sort: {
@@ -46,20 +50,25 @@ function updateTransactionChart(interval, runnerIndex) {
         }
       }));
     }
+
+    // Wait for db lookup to finish, then:
     Q.all(promises)
       .then(function(result) {
         var chartTransactions = result[0];
-        // chartTransactions = null;   
+        
+        // null means there is no existing data, so initialize it
         if (chartTransactions === null) {
           inputs.latestBlock = 1;
           inputs.totalNumTrx = 0;
           inputs.totalAssetTrx = 0;
+
+          // Search the transactions database for the very first transaction
           transactionsCollection.findOne({}, {
             sort: {
               _id: 1
             }
           }).success(function(firstTransaction) {
-            console.log(firstTransaction.reg_date_ISO);
+            console.log('first transaction date:',firstTransaction.reg_date_ISO);
             inputs.currentDay = new Date(firstTransaction.reg_date_ISO.getUTCFullYear(), firstTransaction.reg_date_ISO.getUTCMonth(), firstTransaction.reg_date_ISO.getUTCDate());
             inputs.nextDay = new Date(firstTransaction.reg_date_ISO.getUTCFullYear(), firstTransaction.reg_date_ISO.getUTCMonth(), firstTransaction.reg_date_ISO.getUTCDate());
 
@@ -76,13 +85,16 @@ function updateTransactionChart(interval, runnerIndex) {
 
             return transactionChartData(1, inputs, interval, runnerIndex);
           });
-
+  
+        // If not null we're updating an existing set, start from the last data saved
         } else {
           inputs.latestBlock = chartTransactions.latestBlock;
           inputs.totalNumTrx = chartTransactions.totalNumTrx;
           inputs.totalAssetTrx = chartTransactions.totalAssetTrx;
 
           inputs.currentDay = chartTransactions.date;
+
+          // Set the interval to search in depending on the type of update
           if (interval === 'hourly') {
             inputs.currentDay = new Date(inputs.currentDay.getUTCFullYear(), inputs.currentDay.getUTCMonth(), inputs.currentDay.getUTCDate(), inputs.currentDay.getUTCHours());
             inputs.currentDay.setHours(inputs.currentDay.getHours() + 1 - inputs.currentDay.getTimezoneOffset() / 60);
@@ -98,8 +110,7 @@ function updateTransactionChart(interval, runnerIndex) {
             inputs.nextDay.setHours(+24 * 7);
           }
 
-          // console.log('current day:', inputs.currentDay);
-          // console.log('next day:', inputs.nextDay);
+          // Launch the update
           return transactionChartData(parseInt(chartTransactions._id) + 1, inputs, interval, runnerIndex);
         }
       })
@@ -136,13 +147,8 @@ function transactionChartData(id, inputs, interval, runnerIndex) {
     var totalAssetTrx = inputs.totalAssetTrx;
 
 
-    var currentHour;
-    var currentDay;
-    var currentMonth;
-    var currentYear;
     var transactions;
 
-    // console.log('latestBlock: ' + latestBlock);
     console.log('Searching in interval: ' + new Date(inputs.currentDay) + '< date <' + new Date(inputs.nextDay));
     transactionsCollection.find({
       'reg_date_ISO': {
@@ -156,19 +162,6 @@ function transactionChartData(id, inputs, interval, runnerIndex) {
     }).success(function(transactions) {
       console.log('Found', transactions.length, 'transactions in the interval');
       if (transactions.length > 0) {
-        // console.log('nr of trx found: ' + transactions.length);
-        // console.log(transactions[0].reg_date_ISO);
-        currentHour = transactions[0].reg_date_ISO.getUTCHours();
-        currentDay = transactions[0].reg_date_ISO.getUTCDate();
-        currentMonth = transactions[0].reg_date_ISO.getUTCMonth();
-        currentYear = transactions[0].reg_date_ISO.getUTCFullYear();
-
-        // var utcDate = new Date(Date.UTC(currentYear, currentMonth, currentDay, currentHour, 0, 0));
-        // var lowerDate = new Date(Date.UTC(currentYear, currentMonth, currentDay, currentHour, 0, 0));
-        // var higherDate = new Date(Date.UTC(currentYear, currentMonth, currentDay, currentHour, 0, 0));
-        // utcDate.setHours(utcDate.getHours()+6);
-        // lowerDate.setHours(lowerDate.getHours() - 6);
-        // higherDate.setHours(higherDate.getHours() + 6);
 
         var transactionChart = sumTrx(transactions);
         var feesChart = sumFees(transactions);
@@ -176,7 +169,6 @@ function transactionChartData(id, inputs, interval, runnerIndex) {
         transactionChart._id = id;
         feesChart._id = id;
         transactionChart.date = new Date(new moment.utc(inputs.currentDay));
-        // console.log(transactionChart);
         transactionChart.timestamp = transactionChart.date.getTime();
 
         feesChart.date = new Date(new moment.utc(inputs.currentDay));
@@ -268,7 +260,7 @@ function transactionChartData(id, inputs, interval, runnerIndex) {
   }
 
   function sumTrx(array, lowerDate, higherDate) {
-    var returnArray = {};
+    var returnObject = {};
     var sumValue = 0;
     var numberTransactions = 0;
     var askCount = 0;
@@ -349,24 +341,24 @@ function transactionChartData(id, inputs, interval, runnerIndex) {
 
     }
 
-    returnArray.sumValue = sumValue;
-    returnArray.numberTransactions = numberTransactions;
-    returnArray.latestBlock = lastBlock;
-    returnArray.updateCount = updateCount;
-    returnArray.transferCount = transferCount;
-    returnArray.askCount = askCount;
-    returnArray.shortCount = shortCount;
-    returnArray.feedCount = feedCount;
-    returnArray.bidCount = bidCount;
-    returnArray.coverCount = coverCount;
-    returnArray.registrationCount = registrationCount;
-    returnArray.burnCount = burnCount;
+    returnObject.sumValue = sumValue;
+    returnObject.numberTransactions = numberTransactions;
+    returnObject.latestBlock = lastBlock;
+    returnObject.updateCount = updateCount;
+    returnObject.transferCount = transferCount;
+    returnObject.askCount = askCount;
+    returnObject.shortCount = shortCount;
+    returnObject.feedCount = feedCount;
+    returnObject.bidCount = bidCount;
+    returnObject.coverCount = coverCount;
+    returnObject.registrationCount = registrationCount;
+    returnObject.burnCount = burnCount;
 
-    return returnArray;
+    return returnObject;
   }
 
   function sumFees(array) {
-    var returnArray = {};
+    var returnObject = {};
     var _sumFees = {},
       lastBlock;
 
@@ -385,9 +377,9 @@ function transactionChartData(id, inputs, interval, runnerIndex) {
     }
     // }
 
-    returnArray.sumFees = _sumFees;
+    returnObject.sumFees = _sumFees;
 
-    return returnArray;
+    return returnObject;
   }
 }
 

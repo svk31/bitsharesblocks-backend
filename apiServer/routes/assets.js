@@ -1318,10 +1318,11 @@ module.exports = function(db, app, apicache) {
           }
 
           asset.metaMarket = null;
+          var prefix = asset.issuer_account_id == -2 ? 'bit' : '';
 
           if (metaMarkets.length > 0) {
             for (var i = 0; i < metaMarkets.length; i++) {
-              if ('bit' + asset.symbol === metaMarkets[i].asset_name) {
+              if (prefix + asset.symbol === metaMarkets[i].asset_name) {
                 asset.metaMarket = metaMarkets[i];
                 break;
               }
