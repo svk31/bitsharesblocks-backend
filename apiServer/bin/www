@@ -1,11 +1,16 @@
 #!/usr/bin/env node
+var posix = require('posix');
+// raise maximum number of open file descriptors to 10k,
+// hard limit is left unchanged
+console.log(posix.getrlimit('nofile'));
+posix.setrlimit('nofile', { soft: 10000, hard:10000 });
+
 // Include the cluster module
 var cluster = require('cluster');
 var config = require('../../config.json');
 var http = require('http');
 var https = require('https');
 var fs = require('fs');
-
 
 
 // HTTPS server options
