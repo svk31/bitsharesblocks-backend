@@ -299,6 +299,7 @@ function launchUniqueAccounts() {
           return uniqueAccounts(inputs);
         });
     } else {
+      console.log('uniqueAccountsResult:',uniqueAccountsResult);
       // var startDay = new Date(uniqueAccounts.reg_date_ISO);
       inputs.currentDay = uniqueAccountsResult.date;
       // startDay.setHours(0);

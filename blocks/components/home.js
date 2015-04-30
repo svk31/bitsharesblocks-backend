@@ -121,7 +121,7 @@ function homeUpdate() {
       homeInfo.newAssetsMonth = result[11];
       homeInfo.newAssetsWeek = result[12];
       homeInfo.transactionCount = result[13];
-      console.log('trxCount:', homeInfo.transactionCount);
+      // console.log('trxCount:', homeInfo.transactionCount);
       homeInfo.missedCount = result[14];
       homeInfo.unclaimed = Math.round(result[15].amount / config.basePrecision);
       homeInfo.nrAssetTrx = (result[16]) ? result[16].totalAssetTrx: 0;
@@ -174,13 +174,12 @@ function homeUpdate() {
 
 function securityInfo() {
   console.log('** UPDATING SECURITY INFO **');
+  var security = {};
   Q.all([
-      utils.rpcCall('blockchain_get_security_state', []),
       utils.redisGet('_getInfo')
     ])
     .then(function(results) {
-      var security = results[0];
-      var getInfo = results[1];
+      var getInfo = results[0];
       security._id = 1;
       security.getInfo = getInfo;
       securityCollection.update({

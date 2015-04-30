@@ -35,7 +35,7 @@ module.exports = function(db, app, apicache) {
   app.get('/v1/cmc', cors(), function(req, res) {
     Q.all([
         assetsCollectionv2.find({
-          issuer_account_id: {
+          issuer_id: {
             $lte: 0
           }
         }, {
@@ -70,7 +70,7 @@ module.exports = function(db, app, apicache) {
           // BTS Supply data
           returnObject.BTS = {
             symbol: assets[0].symbol,
-            supply: assets[0].current_share_supply / 100000
+            supply: assets[0].current_supply / 100000
           };
 
           // Market assets data
@@ -91,8 +91,8 @@ module.exports = function(db, app, apicache) {
               returnObject.assets[i - 1].symbol = assets[i].symbol;
               returnObject.assets[i - 1].price = assets[i].lastPrice || 0; // Use vw current price for last two transactions within last hour
               returnObject.assets[i - 1].price = (assets[i].dailyVolume > 1000) ? returnObject.assets[i - 1].price : assets[i].medianFeed;
-              returnObject.assets[i - 1].price = (assets[i].current_share_supply > 0) ? returnObject.assets[i - 1].price : assets[i].medianFeed;
-              returnObject.assets[i - 1].supply = assets[i].current_share_supply;
+              returnObject.assets[i - 1].price = (assets[i].current_supply > 0) ? returnObject.assets[i - 1].price : assets[i].medianFeed;
+              returnObject.assets[i - 1].supply = assets[i].current_supply;
               returnObject.assets[i - 1].volume24h = assets[i].dailyVolume;
 
               if (assets[i].lastDate < lastHour) {
@@ -121,7 +121,7 @@ module.exports = function(db, app, apicache) {
   app.get('/v2/cmc', apicache('60 seconds'), function(req, res) {
     Q.all([
         assetsCollectionv2.find({
-          issuer_account_id: {
+          issuer_id: {
             $lte: 0
           }
         }, {
@@ -156,7 +156,7 @@ module.exports = function(db, app, apicache) {
           // BTS Supply data
           returnObject.BTS = {
             symbol: assets[0].symbol,
-            supply: assets[0].current_share_supply / 100000
+            supply: assets[0].current_supply / 100000
           };
 
           // Market assets data
@@ -177,8 +177,8 @@ module.exports = function(db, app, apicache) {
               returnObject.assets[i - 1].symbol = assets[i].symbol;
               returnObject.assets[i - 1].price = assets[i].lastPrice || 0; // Use vw current price for last two transactions within last hour
               returnObject.assets[i - 1].price = (assets[i].dailyVolume > 1000) ? returnObject.assets[i - 1].price : assets[i].medianFeed;
-              returnObject.assets[i - 1].price = (assets[i].current_share_supply > 0) ? returnObject.assets[i - 1].price : assets[i].medianFeed;
-              returnObject.assets[i - 1].supply = assets[i].current_share_supply;
+              returnObject.assets[i - 1].price = (assets[i].current_supply > 0) ? returnObject.assets[i - 1].price : assets[i].medianFeed;
+              returnObject.assets[i - 1].supply = assets[i].current_supply;
               returnObject.assets[i - 1].volume24h = assets[i].dailyVolume;
 
               if (assets[i].lastDate < lastHour) {
@@ -291,7 +291,7 @@ module.exports = function(db, app, apicache) {
     }
 
     if (!isNaN(end - start) && end - start <= 2 * oneWeek) {
-      // console.log('hourly');
+      console.log('hourly');
       promises.push(transactionChartCollectionHour.find(dateQuery, sortQuery));
     } else if (!isNaN(end - start) && end - start < 12 * oneMonth) {
       promises.push(transactionChartCollectionDay.find(dateQuery, sortQuery));
@@ -306,6 +306,7 @@ module.exports = function(db, app, apicache) {
       .then(function(result) {
         if (result[0]) {
           var transactions = result[0];
+          console.log(transactions);
           var volume = {};
           volume.transactions = reduceSum(transactions, 'timestamp', 'askCount', 'bidCount', 'shortCount', 'coverCount');
           return res.jsonp(")]}',\n" + JSON.stringify(volume));
@@ -561,15 +562,15 @@ module.exports = function(db, app, apicache) {
   app.get('/v1/assets', apicache('29 seconds'), function(req, res) {
     var returnObject = {};
     Q.all([assetsCollection.find({
-          issuer_account_id: -2
+          issuer_id: -2
         }, {
           'fields': {
             'precision': 1,
-            'maximum_share_supply': 1,
+            'max_supply': 1,
             'status': 1,
             'symbol': 1,
-            'issuer_account_id': 1,
-            'current_share_supply': 1,
+            'issuer_id': 1,
+            'current_supply': 1,
             'dailyVolume': 1,
             'numberValidFeeds': 1,
             'averageValidFeeds': 1,
@@ -608,15 +609,15 @@ module.exports = function(db, app, apicache) {
   app.get('/v2/assets', apicache('29 seconds'), function(req, res) {
     var returnObject = {};
     Q.all([assetsCollectionv2.find({
-          issuer_account_id: -2
+          issuer_id: -2
         }, {
           fields: {
             'precision': 1,
-            'maximum_share_supply': 1,
+            'max_supply': 1,
             'status': 1,
             'symbol': 1,
-            'issuer_account_id': 1,
-            'current_share_supply': 1,
+            'issuer_id': 1,
+            'current_supply': 1,
             'dailyVolume': 1,
             'collected_fees': 1,
             'lastOrder': 1
@@ -666,17 +667,17 @@ module.exports = function(db, app, apicache) {
   app.get('/v1/userassets', apicache('300 seconds'), function(req, res) {
     var returnObject = {};
     assetsCollection.find({
-        issuer_account_id: {
+        issuer_id: {
           $ne: -2
         }
       }, {
         'fields': {
           'initialized': 1,
-          'maximum_share_supply': 1,
+          'max_supply': 1,
           'status': 1,
           'symbol': 1,
-          'issuer_account_id': 1,
-          'current_share_supply': 1,
+          'issuer_id': 1,
+          'current_supply': 1,
           'dailyVolume': 1,
           'vwap': 1,
           'lastOrder': 1
@@ -704,17 +705,17 @@ module.exports = function(db, app, apicache) {
   app.get('/v2/userassets', apicache('300 seconds'), function(req, res) {
     var returnObject = {};
     Q.all([assetsCollectionv2.find({
-          issuer_account_id: {
+          issuer_id: {
             $gt: 0
           }
         }, {
           'fields': {
             'initialized': 1,
-            'maximum_share_supply': 1,
+            'max_supply': 1,
             'status': 1,
             'symbol': 1,
-            'issuer_account_id': 1,
-            'current_share_supply': 1,
+            'issuer_id': 1,
+            'current_supply': 1,
             'dailyVolume': 1,
             'vwap': 1,
             'lastPrice': 1,
@@ -1055,7 +1056,7 @@ module.exports = function(db, app, apicache) {
           precision: 1,
           symbol: 1,
           medianFeed: 1,
-          issuer_account_id: 1
+          issuer_id: 1
         }
       }).success(function(result) {
         if (result !== null && result !== undefined) {
@@ -1270,7 +1271,7 @@ module.exports = function(db, app, apicache) {
             precision: 1,
             symbol: 1,
             medianFeed: 1,
-            issuer_account_id: 1,
+            issuer_id: 1,
             dailyVolume: 1
           }
         }),
@@ -1318,7 +1319,7 @@ module.exports = function(db, app, apicache) {
           }
 
           asset.metaMarket = null;
-          var prefix = asset.issuer_account_id == -2 ? 'bit' : '';
+          var prefix = asset.issuer_id == -2 ? 'bit' : '';
 
           if (metaMarkets.length > 0) {
             for (var i = 0; i < metaMarkets.length; i++) {

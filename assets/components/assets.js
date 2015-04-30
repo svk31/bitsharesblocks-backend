@@ -21,7 +21,7 @@ if (setIndex) {
     reg_date_ISO: 1
   });
   assetsCollection.ensureIndex({
-    issuer_account_id: 1
+    issuer_id: 1
   });
   assetsCollection.ensureIndex({
     symbol: 1
@@ -111,6 +111,7 @@ function updateAll() {
 
 function assetInfo(type, selections) {
   var deferred = Q.defer();
+  var start = Date.now();
 
   var assetSelection = selections;
 
@@ -136,7 +137,6 @@ function assetInfo(type, selections) {
     });
 
   } else {
-    var start = Date.now();
 
     var i, j;
     var updatePromises = [];
@@ -215,7 +215,6 @@ function assetInfo(type, selections) {
           var oldAsset = {},
             i, found;
           // asset._id = parseInt(asset.id, 10);
-
           // if (assetSelection) { // Looping over the recent combinations of asset pairs
           switch (type) {
             case 'recent':
@@ -225,7 +224,9 @@ function assetInfo(type, selections) {
                   found = false;
                   for (i = 0; i < existingAssets.length; i++) {
                     if (existingAssets[i]._id === parseInt(quoteAsset, 10)) {
-                      oldAsset = existingAssets[i];
+                      oldAsset = asset;
+                      asset.base = existingAssets[i].base;
+
                       found = true;
                     }
                   }
@@ -253,7 +254,9 @@ function assetInfo(type, selections) {
               found = false;
               for (i = 0; i < existingAssets.length; i++) {
                 if (existingAssets[i]._id === asset.id) {
-                  oldAsset = existingAssets[i];
+                  oldAsset = asset;
+                  asset.base = existingAssets[i].base;
+
                   found = true;
                   console.log('found match:', asset.symbol, '==', existingAssets[i].symbol);
                   updatePromises.push(updateAsset(asset, _baseUnit, oldAsset));
@@ -268,7 +271,8 @@ function assetInfo(type, selections) {
               break;
               // }
             case 'market':
-              if (asset.issuer_account_id === 0 || asset.issuer_account_id === -2) {
+
+              if (asset.issuer_id === 0 || asset.issuer_id === -2) {
                 _lastUpdateBlock = _currentBlock;
                 for (i = 0; i < existingAssets.length; i++) {
                   // console.log(existingAssets[i]);
@@ -333,7 +337,7 @@ function updateAsset(asset, baseAsset, oldAsset) {
     coversPromise = [];
   // console.log('oldAsset:',oldAsset);
   // console.log('asset:',asset);
-  if (asset.issuer_account_id === -2 && baseAsset === _baseUnit) {
+  if (asset.issuer_id === -2 && baseAsset === _baseUnit) {
     medianFeedsPromise = feedsCollection.findOne({
       symbol: asset.symbol
     }, {
@@ -358,6 +362,7 @@ function updateAsset(asset, baseAsset, oldAsset) {
 
   utils.rpcCall('blockchain_market_status', [oldAsset.symbol, baseAsset])
     .then(function(status) {
+      // var start = Date.now();
       Q.all([
           utils.rpcCall('blockchain_market_list_asks', [oldAsset.symbol, baseAsset]),
           utils.rpcCall('blockchain_market_list_bids', [oldAsset.symbol, baseAsset]),
@@ -371,7 +376,7 @@ function updateAsset(asset, baseAsset, oldAsset) {
           })
         ])
         .then(function(results) {
-
+          // console.log(oldAsset.symbol, 'time to fetch data:',Date.now()-start,'ms');
           if (!oldAsset.base) {
             oldAsset.base = {};
           }
@@ -401,8 +406,8 @@ function updateAsset(asset, baseAsset, oldAsset) {
             symbol: asset.symbol
           };
 
-          oldAsset.current_share_supply = asset.current_share_supply / asset.precision;
-          oldAsset.maximum_share_supply = asset.maximum_share_supply / asset.precision;
+          oldAsset.current_supply = asset.current_supply / asset.precision;
+          oldAsset.max_supply = asset.max_supply / asset.precision;
           oldAsset.reg_date_ISO = utils.get_ISO_date(asset.registration_date);
 
           if (!oldAsset.base[baseAsset].status) {
@@ -443,12 +448,10 @@ function updateAsset(asset, baseAsset, oldAsset) {
             sumPricesHalfDay = 0,
             lastXVolume = 0,
             lastXPrices = 0,
-            lastVolume = 0,
             lastPrices = 0,
             lastCounter = 0,
             lastDate,
             currentPrice = false,
-            hourVolume,
             hourPrice;
 
           halfDay.setHours(halfDay.getHours() - 12);
@@ -470,21 +473,21 @@ function updateAsset(asset, baseAsset, oldAsset) {
 
             if (currentDate > yesterday) { // Only include data if data is within last 24 hrs
               oldAsset.base[baseAsset].dailyVolume += volume;
-              sumPrices += volume * order.ask_price.ratio * priceRatio;
+              sumPrices += volume * order.ask_index.order_price.ratio * priceRatio;
 
               if (currentDate > halfDay) {
                 halfDayVolume += volume;
-                sumPricesHalfDay += volume * order.ask_price.ratio * priceRatio;
+                sumPricesHalfDay += volume * order.ask_index.order_price.ratio * priceRatio;
 
                 if ((historyLength - index) < 11) {
                   lastXVolume += volume;
-                  lastXPrices += volume * order.ask_price.ratio * priceRatio;
+                  lastXPrices += volume * order.ask_index.order_price.ratio * priceRatio;
                 }
               }
               // Set current price to latest price to weighted average of the last hour
               if (currentDate > lastHour) {
                 hourVolume += volume;
-                hourPrice += volume * order.ask_price.ratio * priceRatio;
+                hourPrice += volume * order.ask_index.order_price.ratio * priceRatio;
 
               }
             }
@@ -493,7 +496,7 @@ function updateAsset(asset, baseAsset, oldAsset) {
             if ((index) < 3) {
               lastCounter++;
               lastVolume += volume;
-              lastPrices += volume * order.ask_price.ratio * priceRatio;
+              lastPrices += volume * order.ask_index.order_price.ratio * priceRatio;
               lastDate = order.timestamp;
             }
           });
@@ -517,9 +520,7 @@ function updateAsset(asset, baseAsset, oldAsset) {
             oldAsset.lastPrice = lastPrices / lastVolume || 0;
             oldAsset.lastDate = lastDate;
             oldAsset.initialized = true;
-
-            oldAsset.lastOrder = (oldAsset.base[baseAsset].order_history.length > 0) ? oldAsset.base[baseAsset].order_history[0].ask_price.ratio * priceRatio : 0;
-
+            oldAsset.lastOrder = (oldAsset.base[baseAsset].order_history.length > 0) ? oldAsset.base[baseAsset].order_history[0].ask_index.order_price.ratio * priceRatio : 0;
             // Set current price
             currentPrice = lastPrices / lastVolume;
             // Set current price to feed if no orders in last 1 hour
@@ -527,7 +528,7 @@ function updateAsset(asset, baseAsset, oldAsset) {
               currentPrice = oldAsset.medianFeed;
             }
             // Set current price to feed price if no supply
-            currentPrice = (oldAsset.current_share_supply > 0) ? currentPrice : oldAsset.medianFeed;
+            currentPrice = (oldAsset.current_supply > 0) ? currentPrice : oldAsset.medianFeed;
             // Set current price to feed if no volume
             currentPrice = (oldAsset.dailyVolume > 1000) ? currentPrice : oldAsset.medianFeed;
             oldAsset.lastPrice = currentPrice;

@@ -5,6 +5,10 @@ console.log('Launching asset collection scripts at port:', config.rpc_port);
 
 // DB
 var db = require('monk')('localhost/' + config.database);
+// var uniqueAccountsCollection = db.get('uniqueAccounts');
+// var uniqueIDSCollection = db.get('uniqueIDS');
+// uniqueIDSCollection.drop();
+// uniqueAccountsCollection.drop();
 
 // COMPONENTS
 var feeds = require('./components/feeds');
@@ -20,8 +24,8 @@ setInterval(feeds.launchFeedUpdate, 1000 * 60);
 setInterval(assets.launchAssetUpdate, 1000 * 20);
 setInterval(forks.update, 1000 * 60 * 5);
 setInterval(feeds.feedHistory, 1000 * 60 * 30);
-// setInterval(accountsChart.update, 1000 * 60 * 30);
-setInterval(accountsChart.updateUnique, 1000 * 60 * 30);
+setInterval(accountsChart.update, 1000 * 60 * 30);
+setInterval(accountsChart.updateUnique, 1000 * 60);
 setInterval(price.update, 1000 * 60 * 30);
 setInterval(supply.update, 1000 * 60 * 30);
 setInterval(price.updateMetaX, 1000 * 30);
@@ -43,11 +47,11 @@ setInterval(function() {
 }, 1000 * 60 * 60 * 2);
 
 // SINGLE LAUNCH
-// trxChart.update('weekly', 2);
+// trxChart.update('hourly', 0);
 // feeds.launchFeedUpdate();
-// price.update();
-// assets.launchAssetUpdate();
+// setInterval(assets.updateAll, 1000 * 60 * 30);
+// supply.update();
 
-accountsChart.update('daily',1);
-accountsChart.updateUnique();
+// accountsChart.update('daily',1);
+assets.updateAll();
 

@@ -55,7 +55,7 @@ function updateTransactionChart(interval, runnerIndex) {
     Q.all(promises)
       .then(function(result) {
         var chartTransactions = result[0];
-        
+
         // null means there is no existing data, so initialize it
         if (chartTransactions === null) {
           inputs.latestBlock = 1;
@@ -68,7 +68,7 @@ function updateTransactionChart(interval, runnerIndex) {
               _id: 1
             }
           }).success(function(firstTransaction) {
-            console.log('first transaction date:',firstTransaction.reg_date_ISO);
+            console.log('first transaction date:', firstTransaction.reg_date_ISO);
             inputs.currentDay = new Date(firstTransaction.reg_date_ISO.getUTCFullYear(), firstTransaction.reg_date_ISO.getUTCMonth(), firstTransaction.reg_date_ISO.getUTCDate());
             inputs.nextDay = new Date(firstTransaction.reg_date_ISO.getUTCFullYear(), firstTransaction.reg_date_ISO.getUTCMonth(), firstTransaction.reg_date_ISO.getUTCDate());
 
@@ -85,8 +85,8 @@ function updateTransactionChart(interval, runnerIndex) {
 
             return transactionChartData(1, inputs, interval, runnerIndex);
           });
-  
-        // If not null we're updating an existing set, start from the last data saved
+
+          // If not null we're updating an existing set, start from the last data saved
         } else {
           inputs.latestBlock = chartTransactions.latestBlock;
           inputs.totalNumTrx = chartTransactions.totalNumTrx;
@@ -100,6 +100,13 @@ function updateTransactionChart(interval, runnerIndex) {
             inputs.currentDay.setHours(inputs.currentDay.getHours() + 1 - inputs.currentDay.getTimezoneOffset() / 60);
             inputs.nextDay = new Date(inputs.currentDay.getUTCFullYear(), inputs.currentDay.getUTCMonth(), inputs.currentDay.getUTCDate(), inputs.currentDay.getUTCHours());
             inputs.nextDay.setHours(inputs.nextDay.getHours() + 1 - inputs.nextDay.getTimezoneOffset() / 60);
+
+            // if (inputs.nextDay.getTime() === inputs.currentDay.getTime()) {
+            //   console.log('nextDay:', inputs.nextDay, inputs.nextDay.getHours());
+            //   inputs.nextDay.setHours(inputs.nextDay.getHours() + 2);
+            //   console.log('nextDay:', inputs.nextDay);
+            // }
+
           } else if (interval === 'daily') {
             inputs.currentDay.setHours(+24);
             inputs.nextDay = new Date(inputs.currentDay);
@@ -109,6 +116,8 @@ function updateTransactionChart(interval, runnerIndex) {
             inputs.nextDay = new Date(inputs.currentDay);
             inputs.nextDay.setHours(+24 * 7);
           }
+
+          // console.log('existing set:,date:', chartTransactions.date, 'currentDay:', inputs.currentDay, 'nextDay:', inputs.nextDay);
 
           // Launch the update
           return transactionChartData(parseInt(chartTransactions._id) + 1, inputs, interval, runnerIndex);
@@ -245,6 +254,10 @@ function transactionChartData(id, inputs, interval, runnerIndex) {
         if (interval === 'hourly') {
           inputs.currentDay.setHours(inputs.currentDay.getHours() + 1);
           inputs.nextDay.setHours(inputs.nextDay.getHours() + 1);
+          // if (inputs.nextDay === inputs.currentDay) {
+          //   console.log("same time");
+          //   inputs.nextDay.setHours(inputs.nextDay.getHours() + 1);
+          // }
         } else if (interval === 'daily') {
           inputs.currentDay.setHours(+24);
           inputs.nextDay.setHours(+24);
@@ -252,7 +265,7 @@ function transactionChartData(id, inputs, interval, runnerIndex) {
           inputs.currentDay.setHours(+24 * 7);
           inputs.nextDay.setHours(+24 * 7);
         }
-        return transactionChartData(id, inputs, interval, runnerIndex);
+        // return transactionChartData(id, inputs, interval, runnerIndex);
       }
     });
   } else {

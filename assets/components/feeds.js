@@ -38,7 +38,7 @@ function launchFeedUpdate() {
         var activeDelegates = results[1];
         console.log('FEED UPDATE: nr of assets found:', assets.length);
         assets.forEach(function(asset, index) {
-          if (asset.issuer_account_id === -2) {
+          if (asset.issuer_id === -2) {
             updatePromises.push(_updateFeeds(asset, activeDelegates));
           }
         });
@@ -152,13 +152,13 @@ function feedHistory() {
   if (!_feedsHistoryRunning) {
     Q.all([
         assetsCollection.find({
-          issuer_account_id: -2
+          issuer_id: -2
         }, {
           fields: {
             base: 1,
             symbol: 1,
             precision: 1,
-            current_share_supply: 1,
+            current_supply: 1,
             dailyVolume: 1,
             medianFeed: 1,
             vwap: 1,
@@ -226,7 +226,7 @@ function feedHistory() {
           var deviation24h = (asset.medianFeed !== 0) ? 100 - 100 * asset.vwapLastX / asset.medianFeed : 100;
           var tempObject = {};
 
-          currentPrice = (asset.current_share_supply > 0) ? currentPrice : asset.medianFeed;
+          currentPrice = (asset.current_supply > 0) ? currentPrice : asset.medianFeed;
           currentPrice = (asset.dailyVolume > 1000) ? currentPrice : asset.medianFeed;
 
           // console.log(asset.symbol, ': Current price:', currentPrice);

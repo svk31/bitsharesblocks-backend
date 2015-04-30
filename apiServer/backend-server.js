@@ -47,7 +47,7 @@
     premajor: 0
   };
 
-  var hardFork = 2113000;
+  var hardFork = 2460000;
   var maintenance = false;
 
   var currentBlock;

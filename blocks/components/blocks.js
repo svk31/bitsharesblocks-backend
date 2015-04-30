@@ -99,7 +99,12 @@ function getAllBlocks() {
 				}
 				if (_updateRunning === false) {
 					_updateRunning = true;
-					return updateBlock(lastSavedBlock).then(function(result) {
+					updateBlock(lastSavedBlock).then(function(result) {
+						console.log(result);
+						_updateRunning = false;
+					})
+					.catch(function(err) {
+						// console.log(err);
 						_updateRunning = false;
 					});
 				} else {
@@ -110,6 +115,7 @@ function getAllBlocks() {
 		.catch(function(error) {
 			console.log(' get block rpc failed:');
 			console.log(error);
+			_updateRunning = false;
 		});
 }
 
@@ -215,15 +221,17 @@ function updateBlock(blockHeight) {
 					});
 			});
 	} else {
-		deferred.resolve('AT CURRENT BLOCK');
+		deferred.reject("No new blocks found");
 	}
 	return deferred.promise;
 }
 
 function trxLoop(trx, block) {
 	var promises = [];
-
 	var transactions = {};
+
+
+
 	transactions._id = block.blockNum;
 	transactions.reg_date_ISO = block.reg_date_ISO;
 	if (trx === undefined) {
@@ -249,22 +257,21 @@ function trxLoop(trx, block) {
 		assetCreate = 0;
 	var marketOps = ['ask_index', 'bid_index', 'cover_index', 'short_index'];
 	trx.forEach(function(transaction, index) {
-
 		transactions.full_ids.push(transaction[0]);
 		transactions.short_ids.push(transaction[0].substr(0, 8));
 
-		for (var jj = 0; jj < transaction[1].balance.length; jj++) {
-			if (!transactions.fees[transaction[1].balance[jj][0]]) {
-				transactions.fees[transaction[1].balance[jj][0]] = 0;
+		for (var jj = 0; jj < transaction[1].fees_paid.length; jj++) {
+			if (!transactions.fees[transaction[1].fees_paid[jj][0]]) {
+				transactions.fees[transaction[1].fees_paid[jj][0]] = 0;
 			}
-			transactions.fees[transaction[1].balance[jj][0]] += transaction[1].balance[jj][1];
+			transactions.fees[transaction[1].fees_paid[jj][0]] += transaction[1].fees_paid[jj][1];
 		}
-		for (jj = 0; jj < transaction[1].withdraws.length; jj++) {
-			let withdraws = transaction[1].withdraws[jj];
+		for (jj = 0; jj < transaction[1].op_deltas[0][1].length; jj++) {
+			let withdraws = transaction[1].op_deltas[0][1][jj];
 			var withdrawnAsset, withdrawnAmount;
 
 			withdrawnAsset = (withdraws[1].asset_id) ? withdraws[1].asset_id : withdraws[0];
-			withdrawnAmount = (withdraws[1].amount) ? withdraws[1].amount : withdraws[1];
+			withdrawnAmount = (withdraws[1].amount) ? withdraws[1].amount : Math.abs(withdraws[1]);
 
 			// console.log('withdrawnAsset',withdrawnAsset);
 			// console.log('withdrawnAmount',withdrawnAmount);
