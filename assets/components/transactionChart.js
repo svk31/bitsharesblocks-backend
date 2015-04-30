@@ -234,6 +234,7 @@ function transactionChartData(id, inputs, interval, runnerIndex) {
           .catch(function(error) {
             console.log('failed to write trx chart');
             console.log(error);
+            _trxChartRunning[runnerIndex] = false;
           });
         // });
       } else {
@@ -338,7 +339,6 @@ function transactionChartData(id, inputs, interval, runnerIndex) {
         }
         // }
       }
-
     }
 
     returnObject.sumValue = sumValue;
