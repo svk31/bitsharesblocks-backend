@@ -11,6 +11,7 @@ module.exports = function(db, app, apicache) {
     btsxPriceCollection.find({}).success(function(doc) {
         if (doc) {
           doc = doc[0];
+          
           return res.jsonp(")]}',\n" + JSON.stringify(doc));
         } else {
           return res.status(404).send();
@@ -75,19 +76,19 @@ module.exports = function(db, app, apicache) {
     var i, value;
 
     var timestamp = (timeStamp) ? timeStamp : 0;
-    if (assetName === 'USD') {
-      historical = usd_price_full;
+    // if (assetName === 'USD') {
+    //   historical = usd_price_full;
 
-    } else if (assetName === 'BTC') {
-      historical = btc_price_full;
-    }
-    if (historical) {
-      for (i = 0; i < historical.length; i++) {
-        if (historical[i][0] >= timestamp) {
-          returnArray.push(historical[i]);
-        }
-      }
-    }
+    // } else if (assetName === 'BTC') {
+    //   historical = btc_price_full;
+    // }
+    // if (historical) {
+    //   for (i = 0; i < historical.length; i++) {
+    //     if (historical[i][0] >= timestamp) {
+    //       returnArray.push(historical[i]);
+    //     }
+    //   }
+    // }
 
     for (i = 0; i < array.length; i++) {
       if (i === 0 || i % 9 === 0 || i === (array.length - 1)) {

@@ -6,7 +6,7 @@
     "start": "forever -c '/usr/bin/nodemon --harmony --delay 5 --exitcrash' assets.js"
   },
   "dependencies": {
-    "moment": "^2.8.2",
+    "moment": "^2.10.3",
     "mongodb": "^1.4.25",
     "monk": "^0.9.0",
     "q": "^1.1.2",

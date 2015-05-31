@@ -3,7 +3,6 @@
 const config = require('../../config_play.json');
 var utils = require('../../utils/utils.js');
 
-var moment = require('moment');
 var Q = require('q');
 
 // db def

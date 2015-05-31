@@ -24,7 +24,7 @@ setInterval(accountsChart.update, 1000 * 60 * 30);
 setInterval(accountsChart.updateUnique, 1000 * 60 * 30);
 setInterval(price.update, 1000 * 60 * 30);
 setInterval(supply.update, 1000 * 60 * 30);
-setInterval(price.updateMetaX, 1000 * 30);
+// setInterval(price.updateMetaX, 1000 * 30);
 
 setInterval(function() {
   trxChart.update('hourly', 0);
@@ -39,8 +39,8 @@ setInterval(function() {
 }, 1000 * 60 * 60 * 24);
 
 // SINGLE LAUNCH
-trxChart.update('hourly', 0);
+// trxChart.update('hourly', 0);
 // feeds.launchFeedUpdate();
-// supply.update();
-assets.updateAll();
+price.update();
+// assets.updateAll();
 

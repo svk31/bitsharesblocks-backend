@@ -6,3 +6,5 @@ utils/node_modules
 config.json
 config_play.json
 config_dvs.json
+apiServer/push_pls
+assets/push_pls

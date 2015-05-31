@@ -25,17 +25,21 @@ function fetchPrice() {
     } else {
       _id = parseInt(price._id, 10) + 1;
     }
-    request('http://coinmarketcap.northpole.ro/api/v5/BTS.json', function(error, response, body) {
+    request('https://yunbi.com:443//api/v2/tickers/plscny.json', function(error, response, body) {
       if (!error && response.statusCode == 200) {
         body = JSON.parse(body);
+        // console.log("body:", body);
         body._id = parseInt(_id, 10);
-        delete body.marketCap;
-        delete body.change7d;
-        delete body.change7h;
-        delete body.change1h;
+        let data = {
+          _id: _id,
+          price: {
+            cny: body.ticker.last
+          },
+          timestamp: body.at
+        }
         btsPriceCollection.update({
-            '_id': body._id
-          }, body, {
+            '_id': data._id
+          }, data, {
             'upsert': true
           }).success(function(doc) {
             return console.log('** EXTERNAL PRICE UPDATE DONE ** ');
