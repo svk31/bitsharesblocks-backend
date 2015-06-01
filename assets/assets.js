@@ -47,11 +47,11 @@ setInterval(function() {
 }, 1000 * 60 * 60 * 2);
 
 // SINGLE LAUNCH
-// trxChart.update('hourly', 0);
+trxChart.update('hourly', 0);
 // feeds.launchFeedUpdate();
 // setInterval(assets.updateAll, 1000 * 60 * 30);
 // supply.update();
 
 // accountsChart.update('daily',1);
-assets.updateAll();
+// assets.updateAll();
 

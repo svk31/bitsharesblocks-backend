@@ -35,9 +35,12 @@ module.exports = function(db, app, apicache) {
   app.get('/v1/cmc', cors(), function(req, res) {
     Q.all([
         assetsCollectionv2.find({
-          issuer_id: {
+          $or:[{issuer_id: {
             $lte: 0
-          }
+          }},
+          {
+            symbol:'NOTE'
+          }]
         }, {
           sort: {
             _id: 1
@@ -121,9 +124,12 @@ module.exports = function(db, app, apicache) {
   app.get('/v2/cmc', apicache('60 seconds'), function(req, res) {
     Q.all([
         assetsCollectionv2.find({
-          issuer_id: {
+          $or:[{issuer_id: {
             $lte: 0
-          }
+          }},
+          {
+            symbol:'NOTE'
+          }]
         }, {
           sort: {
             _id: 1
@@ -306,7 +312,6 @@ module.exports = function(db, app, apicache) {
       .then(function(result) {
         if (result[0]) {
           var transactions = result[0];
-          console.log(transactions);
           var volume = {};
           volume.transactions = reduceSum(transactions, 'timestamp', 'askCount', 'bidCount', 'shortCount', 'coverCount');
           return res.jsonp(")]}',\n" + JSON.stringify(volume));
@@ -1563,7 +1568,7 @@ module.exports = function(db, app, apicache) {
         Math.round(precision * 1 / array[i].closing_price) / precision
       ]);
       returnArray.volume.push([array[i].timestamp,
-        Math.round((array[i].volume / config.basePrecision) * 100) / 100
+        Math.round((array[i].base_volume / config.basePrecision) * 100) / 100
       ]);
     }
     return returnArray;

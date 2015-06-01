@@ -211,13 +211,13 @@ function updateBlock(blockHeight) {
 								}
 							})
 							.catch(function(error) {
-								console.log('updatePromises error');
-								console.log(error);
-								deferred.resolve(error);
+								console.log('updatePromises error:', error);
+								deferred.reject(error);
 							});
 					})
 					.catch(function(error) {
-						console.log(error);
+						console.log('block rpc calls error:', error);
+						deferred.reject(error);
 					});
 			});
 	} else {

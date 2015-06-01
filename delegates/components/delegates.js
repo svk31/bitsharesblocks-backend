@@ -51,7 +51,7 @@ function updateDelegates() {
       .then(function(results) {
         var delegates = results[0];
         var btsSupply = results[1][0].currentSupply;
-        console.log('found delegates');
+        console.log('found ' + results[0].length + ' delegates');
 
         delegates.forEach(function(entry, index) {
           entry._id = entry.id;
@@ -65,6 +65,21 @@ function updateDelegates() {
           entry.delegate_info.pay_balance = Math.round(entry.delegate_info.pay_balance / config.basePrecision);
           entry.reliability = 100 - entry.delegate_info.blocks_missed / (entry.delegate_info.blocks_produced + entry.delegate_info.blocks_missed) * 100;
 
+          if (entry.public_data) {
+            for (let key in entry.public_data) {
+              if (key.indexOf(".") !== -1) {
+                delete entry.public_data[key];
+              }
+            }
+            if (entry.public_data.delegate) {
+              for (let key in entry.public_data.delegate) {
+                if (key.indexOf(".") !== -1) {
+                  delete entry.public_data.delegate[key];
+                }
+              }
+            }
+          }
+
           promises.push(delegatesListCollection.update({
             '_id': entry.id
           }, entry, {
@@ -73,10 +88,14 @@ function updateDelegates() {
 
         });
         Q.all(promises).then(function(result) {
-          _delegateRunning = false;
-          console.log('** DELEGATE UPDATE DONE **');
-          return;
-        });
+            _delegateRunning = false;
+            console.log('** DELEGATE UPDATE DONE **');
+            return;
+          })
+          .catch(function(err) {
+            console.log('DELEGATE UPDATE ERROR', err);
+            _delegateRunning = false;
+          })
       })
       .catch(function(error) {
         _delegateRunning = false;

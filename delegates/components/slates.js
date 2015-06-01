@@ -72,7 +72,7 @@ function updateSlate(delegate) {
 				});
 		})
 		.catch(function(error) {
-			console.log(error);
+			console.log("get_slate rpc error:", error);
 			deferred.reject(error);
 		});
 	return deferred.promise;
