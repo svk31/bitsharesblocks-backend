@@ -18,7 +18,7 @@ module.exports = function(db, app, apicache) {
   };
   var _currentBlock, _currentBlockData;
   var approvedOperations = ['burn', 'asset_short', 'asset_ask', 'asset_bid', 'asset_cover', 'asset_issue', 'asset_create',
-    'account_register', 'account_update', 'update_feed', 'transfer', 'add_collateral', 'withdraw_pay', 'all'
+    'account_register', 'account_update', 'update_feed', 'transfer', 'add_collateral', 'withdraw_pay', 'all', 'secret_note'
   ];
 
 

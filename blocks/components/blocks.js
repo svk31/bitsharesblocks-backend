@@ -8,7 +8,7 @@ var pay = require('./pay');
 var Q = require('q');
 
 var _updateRunning = false;
-var _currentBlock = 1;
+var _currentBlock = 579800;
 var _getInfo;
 var _previousStamp;
 var _redisAssets = [];
@@ -263,22 +263,23 @@ function trxLoop(trx, block) {
 			}
 			transactions.fees[transaction[1].fees_paid[jj][0]] += transaction[1].fees_paid[jj][1];
 		}
-		for (jj = 0; jj < transaction[1].op_deltas[0][1].length; jj++) {
-			let withdraws = transaction[1].op_deltas[0][1][jj];
+		for (jj = 0; jj < transaction[1].op_deltas.length; jj++) {
+			let withdraws = transaction[1].op_deltas[jj][1][0];
 			var withdrawnAsset, withdrawnAmount;
+			if (jj < transaction[1].op_deltas.length - 1 || transaction[1].op_deltas.length === 1) {
+				withdrawnAsset = (withdraws[1].asset_id) ? withdraws[1].asset_id : withdraws[0];
+				withdrawnAmount = (withdraws[1].amount) ? withdraws[1].amount : Math.abs(withdraws[1]);
 
-			withdrawnAsset = (withdraws[1].asset_id) ? withdraws[1].asset_id : withdraws[0];
-			withdrawnAmount = (withdraws[1].amount) ? withdraws[1].amount : Math.abs(withdraws[1]);
+				// console.log('withdrawnAsset',withdrawnAsset);
+				// console.log('withdrawnAmount',withdrawnAmount);
 
-			// console.log('withdrawnAsset',withdrawnAsset);
-			// console.log('withdrawnAmount',withdrawnAmount);
-
-			if (!transactions.totalvalue[withdrawnAsset]) {
-				transactions.totalvalue[withdrawnAsset] = 0;
+				if (!transactions.totalvalue[withdrawnAsset]) {
+					transactions.totalvalue[withdrawnAsset] = 0;
+				}
+				transactions.totalvalue[withdrawnAsset] += withdrawnAmount;
 			}
-			transactions.totalvalue[withdrawnAsset] += withdrawnAmount;
 		}
-		
+
 		transactions.transactions[index][1].type = 'transfer';
 
 
@@ -359,6 +360,13 @@ function trxLoop(trx, block) {
 				transactions.transactions[index][1].asset = transaction[1].trx.operations[kk].data.bid_index.order_price.quote_asset_id;
 				transactions.transactions[index][1].baseasset = transaction[1].trx.operations[kk].data.bid_index.order_price.base_asset_id;
 				transactions.transactions[index][1].ratio = transaction[1].trx.operations[kk].data.bid_index.order_price.ratio;
+				break;
+			}
+			if (transaction[1].trx.operations[kk].type === 'note_op_type') {
+				transactions.transactions[index][1].type = 'secret_note';
+				// transactions.transactions[index][1].asset = transaction[1].trx.operations[kk].data.bid_index.order_price.quote_asset_id;
+				// transactions.transactions[index][1].baseasset = transaction[1].trx.operations[kk].data.bid_index.order_price.base_asset_id;
+				// transactions.transactions[index][1].ratio = transaction[1].trx.operations[kk].data.bid_index.order_price.ratio;
 				break;
 			}
 			if (transaction[1].trx.operations[kk].type === 'short_op_type' || transaction[1].trx.operations[kk].type === 'short_op_v2_type') {
@@ -461,7 +469,7 @@ function trxLoop(trx, block) {
 	};
 }
 
-// launchTransactionUpdates(1657679);
+launchTransactionUpdates(1);
 
 
 function launchTransactionUpdates(index) {
@@ -475,6 +483,7 @@ function launchTransactionUpdates(index) {
 
 function updateTransactionsOnly(index) {
 	var deferred = Q.defer();
+	// console.log("update trx from block:", index, "_currentBlock:", _currentBlock);
 	if (index <= _currentBlock) {
 
 		blocksCollection.findOne({

@@ -239,6 +239,7 @@ function rankHistory() {
 		_rankRunning = true;
 		console.log('** UPDATING RANK HISTORY **');
 		console.log('current block: ' + _currentBlock);
+		
 		ranksHistoryCollection.findOne({}, {
 			sort: {
 				'_id': -1
@@ -250,7 +251,7 @@ function rankHistory() {
 			} else {
 				lastBlock = ranks._id;
 			}
-			console.log('last _id:' + lastBlock);
+			console.log('Rank history | last block _id:' + lastBlock);
 
 			return updateRanks(lastBlock);
 
@@ -387,6 +388,7 @@ function getRankMovement() {
 			}).success(function(dayRanks) {
 				console.log('yesterday id:' + dayRanks._id);
 				for (i = 0; i < dayRanks.ranks.length; i++) {
+					console.log("dayRanks | i:", i, "id:", dayRanks.ranks[i], "currentRank:", ranks.current[dayRanks.ranks[i]])
 					changeDay[dayRanks.ranks[i]] = i - ranks.current[dayRanks.ranks[i]];
 					// if (dayRanks.ranks[i]==10323) {
 					//   console.log('yesterday rank:'+i);
@@ -396,6 +398,7 @@ function getRankMovement() {
 				console.log('one week of blocks:', oneWeek);
 
 				console.log('week, block greater than:', currentId - oneWeek);
+				
 				ranksHistoryCollection.findOne({
 					'_id': {
 						$gte: (currentId - oneWeek)
@@ -413,6 +416,8 @@ function getRankMovement() {
 						// }
 					}
 
+					console.log("changeDay:", changeDay);
+
 					delegatesRankCollection.update({
 						'_id': 1
 					}, {
@@ -423,7 +428,10 @@ function getRankMovement() {
 						upsert: true
 					}).success(function(doc) {
 						return console.log('wrote ranks');
-					});
+					})
+					.error(function(error) {
+						return console.log('rank update failed:', error);
+					})
 				}); // week
 			});
 		}

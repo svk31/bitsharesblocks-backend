@@ -42,12 +42,12 @@
 
   var versionData_v2 = {
     major: 0,
-    minor: 0,
-    patch: 5,
+    minor: 1,
+    patch: 0,
     premajor: 0
   };
 
-  var hardFork = 1;
+  var hardFork = 574000;
   var maintenance = false;
 
   var currentBlock;

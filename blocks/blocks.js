@@ -18,8 +18,8 @@ setInterval(home.blockchainUpdate, 1000 * 60 * 10);
 
 // SINGLE LAUNCH
 
-accounts.update();
-home.securityUpdate();
+blocks.update();
+// home.securityUpdate();
 
 
 
