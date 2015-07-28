@@ -26,7 +26,7 @@ module.exports = function(db, app, apicache) {
     var timestamp = new Date(Date.now());
     timestamp.setDate(timestamp.getDate() - 30);
 
-    if (symbol === 'USD' || symbol === 'BTC' || symbol === 'CNY' || symbol === 'EUR') {
+    if (symbol === 'USD' || symbol === 'BTC' || symbol === 'CNY' || symbol === 'EUR' || symbol === 'GBP') {
       btsxPriceCollection.find({
           timestamp: {
             $gte: timestamp.getTime() / 1000
@@ -50,7 +50,7 @@ module.exports = function(db, app, apicache) {
 
   app.get('/v1/price/:symbol', apicache('15 minutes'), function(req, res) {
     var symbol = req.params.symbol;
-    if (symbol === 'USD' || symbol === 'BTC' || symbol === 'CNY' || symbol === 'EUR') {
+    if (symbol === 'USD' || symbol === 'BTC' || symbol === 'CNY' || symbol === 'EUR' || symbol === 'GBP') {
       btsxPriceCollection.find({})
         .success(function(realprice) {
           if (realprice) {
