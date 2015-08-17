@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "forever -c '/usr/bin/nodemon --harmony --delay 5 --exitcrash' blocks.js"
+    "babel-node": "babel-node --stage 1 --ignore='foo|bar|baz'",
+    "start": "forever -c '/usr/bin/nodemon --exec babel-node --delay 5 --exitcrash' blocksController.js"
   },
   "dependencies": {
     "moment": "^2.8.2",

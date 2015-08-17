@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "private": true,
   "scripts": {
-    "start": "forever -c '/usr/bin/nodemon --delay 7 --exitcrash --harmony' ./bin/www"
+    "start": "forever -c '/usr/bin/nodemon --delay 7 --exitcrash --harmony' ./backend-server.js"
   },
   "dependencies": {
     "apicache": "0.0.12",

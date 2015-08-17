@@ -1,80 +1,45 @@
-  'use strict';
+  // 'use strict';
 
   var config = require('../config.json');
+  var redis = require("redis");
+  
+  var app = require('express')();
 
-  var express = require('express');
   var logger = require('morgan');
-  var bodyParser = require('body-parser');
-  var router = express.Router();
-  var compression = require('compression');
-
-  var apicache = require('apicache').options({
-    debug: false
-  }).middleware;
-
-  var app = express();
 
   app.use(logger('dev'));
-  app.use(bodyParser.json());
-  app.use(bodyParser.urlencoded());
-  app.use(compression({
-    threshold: 25
-  }));
 
-  // db def
-  console.log('using database: ' + config.database);
-  var db = require('monk')('localhost/' + config.database);
+  var sub = redis.createClient();
 
-  var versionData = {
-    'main': 4,
-    'increment': {
-      'current': 27,
-      'previous': 26,
-      'old': 999
-    },
-    'RC': {
-      'current': 1,
-      'previous': 999,
-      'old': 999,
-      'multiplier': 1
-    }
-  };
+  var http = require('http').Server(app);
+  var io = require('socket.io')(http);
 
-  var versionData_v2 = {
-    major: 0,
-    minor: 9,
-    patch: 2,
-    premajor: 0
-  };
+  io.on('connection', function(socket) {
+    console.log('a user connected');
 
-  var hardFork = 2580000;
-  var maintenance = false;
+    socket.on('disconnect', function() {
+      console.log('user disconnected');
+    });
 
-  var currentBlock;
-  var limitTo = 20; // max number of blocks to return
-  var blockFields = {
-    '_id': 1,
-    'timestamp': 1,
-    'signee': 1,
-    'trxLength': 1
-  };
+    socket.on('subscribe', function(room) {
+      console.log('joining room', room);
+      socket.join(room);
+    })
 
-  /*
-   */
-  app.all('*', function(req, res, next) {
-    res.header('Content-Type', 'application/json');
-  //   // res.header("Access-Control-Allow-Origin", "*");
-  //   // res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    next();
+    socket.on('unsubscribe', function(room) {
+      socket.leave(room);
+    })
+
+
   });
 
-  require('./routes/blocks.js')(db, app, apicache);
-  require('./routes/misc.js')(db, app, maintenance, hardFork, apicache);
-  require('./routes/assets.js')(db, app, apicache);
-  require('./routes/delegates.js')(db, app, versionData, versionData_v2, maintenance, apicache);
-  require('./routes/price.js')(db, app, apicache);
-  require('./routes/accounts.js')(db, app, apicache);
+  require('./routes/new-blocks.js')(io, sub);
 
-  // require('./routes/handlebars.js')(db, app);
+  // sub.subscribe('new_block');
+  // sub.on('message', function(channel, data) {
+  //   console.log('message:', channel, data);
+  // })
 
-  module.exports = app;
+  http.listen(config.ws_port, function() {
+    console.log('listening on *:', config.ws_port);
+  });

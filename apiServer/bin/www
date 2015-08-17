@@ -8,9 +8,11 @@ posix.setrlimit('nofile', { soft: 10000, hard:10000 });
 // Include the cluster module
 var cluster = require('cluster');
 var config = require('../../config.json');
-var http = require('http');
+
 var https = require('https');
 var fs = require('fs');
+
+var sticky = require('sticky-session');
 
 
 // HTTPS server options
@@ -44,10 +46,30 @@ if (cluster.isMaster) {
 else {
   var debug = require('debug')('app');
   var app = require('../backend-server');
+  sticky(function() {
+    // This code will be executed only in slave workers 
+   
+    var http = require('http');
+    var io = require('socket.io');
+    // app.set('port', process.env.PORT || config.server_port);
+    // console.log('Express http listening on port:',config.server_port,' PID: ',process.pid);
+    var server = http.createServer(app).listen(config.server_port);
 
-  // app.set('port', process.env.PORT || config.server_port);
-  console.log('Express http listening on port:',config.server_port,' PID: ',process.pid);
-  http.createServer(app).listen(config.server_port);
+    io.listen(server);
+
+    io.on('connection', function(socket){
+      console.log('a user connected');
+
+      socket.on('disconnect', function(){
+        console.log('user disconnected');
+      });
+    });
+
+    return server;
+
+  }).listen(config.ws_port, function(){
+    console.log('listening on *:', config.ws_port);
+  });
   // console.log('Express https listening on port:',443,' PID: ',process.pid);
   // https.createServer(https_options, app).listen(443);
 }
