@@ -21,155 +21,163 @@ var transactionChartCollectionHour = db.get('trxChartsHour');
 var supplyCollection = db.get('supply');
 
 // FUNCTIONS
+var homeRunning = false;
+
 function homeUpdate() {
-  console.log('** RUNNING HOME UPDATE **');
+  if (homeRunning) {
+    console.log("-- HOME UPDATE ALREADY RUNNING --");
+  } else {
+    console.log('** RUNNING HOME UPDATE **');
+    homeRunning = true;
+    var yesterday = new moment.utc;
+    var oneWeekAgo = new moment.utc;
+    var oneMonthAgo = new moment.utc;
 
-  var yesterday = new moment.utc;
-  var oneWeekAgo = new moment.utc;
-  var oneMonthAgo = new moment.utc;
+    yesterday = yesterday.subtract(1, 'days');
+    oneWeekAgo = oneWeekAgo.subtract(7, 'days');
+    oneMonthAgo = oneMonthAgo.subtract(30, 'days');
 
-  yesterday = yesterday.subtract(1, 'days');
-  oneWeekAgo = oneWeekAgo.subtract(7, 'days');
-  oneMonthAgo = oneMonthAgo.subtract(30, 'days');
+    var startDay = new Date(yesterday.year(), yesterday.month(), yesterday.date(), yesterday.hour(), yesterday.minute());
+    var startWeek = new Date(oneWeekAgo.year(), oneWeekAgo.month(), oneWeekAgo.date(), oneWeekAgo.hour(), oneWeekAgo.minute());
+    var startMonth = new Date(oneMonthAgo.year(), oneMonthAgo.month(), oneMonthAgo.date(), oneMonthAgo.hour(), oneMonthAgo.minute());
 
-  var startDay = new Date(yesterday.year(), yesterday.month(), yesterday.date(), yesterday.hour(), yesterday.minute());
-  var startWeek = new Date(oneWeekAgo.year(), oneWeekAgo.month(), oneWeekAgo.date(), oneWeekAgo.hour(), oneWeekAgo.minute());
-  var startMonth = new Date(oneMonthAgo.year(), oneMonthAgo.month(), oneMonthAgo.date(), oneMonthAgo.hour(), oneMonthAgo.minute());
-
-  Q.all([
-      accountsCollection.count({}),
-      accountsCollection.count({
-        reg_date_ISO: {
-          $gte: startDay
-        }
-      }),
-      accountsCollection.count({
-        reg_date_ISO: {
-          $gte: new Date(startWeek)
-        }
-      }),
-      accountsCollection.count({
-        isSub: true
-      }),
-      delegatesListCollection.count({}),
-      delegatesListCollection.count({
-        'delegate_info.votes_for': {
-          '$gt': 0
-        }
-      }),
-      delegatesListCollection.count({
-        reg_date_ISO: {
-          $gte: startDay
-        }
-      }),
-      delegatesListCollection.count({
-        reg_date_ISO: {
-          $gte: new Date(startWeek)
-        }
-      }),
-      securityCollection.find({}),
-      assetsCollection.count({}),
-      assetsCollection.count({
-        issuer_account_id: {
-          $gt: 0
-        }
-      }),
-      assetsCollection.count({
-        reg_date_ISO: {
-          $gte: startMonth
-        }
-      }),
-      assetsCollection.count({
-        reg_date_ISO: {
-          $gte: new Date(startWeek)
-        }
-      }),
-      transactionsCollection.count({}),
-      missedCollection.count({}),
-      utils.rpcCall('blockchain_unclaimed_genesis', []),
-      transactionChartCollectionHour.findOne({}, {
-        sort: {
-          _id: -1
-        }
-      }),
-      supplyCollection.find({}),
-      blockchainInfoCollection.find(),
-      delegatesListCollection.find({
-        rank: {
-          $lt: 102
-        }
-      }, {
-        fields: {
-          delegate_info: 1
-        }
-      })
-    ])
-    .then(function(result) {
-      var homeInfo = {};
-      homeInfo._id = 1;
-      homeInfo.numberOfUsers = result[0];
-      homeInfo.newAccountsDay = result[1];
-      homeInfo.newAccountsWeek = result[2];
-      homeInfo.subaccounts = result[3];
-      homeInfo.numberOfDelegates = result[4];
-      homeInfo.numberOfVotedDelegates = result[5];
-      homeInfo.newDelegatesDay = result[6];
-      homeInfo.newDelegatesWeek = result[7];
-      homeInfo.security = result[8][0];
-      homeInfo.assetCount = result[9];
-      homeInfo.userAssets = result[10];
-      homeInfo.newAssetsMonth = result[11];
-      homeInfo.newAssetsWeek = result[12];
-      homeInfo.transactionCount = result[13];
-      // console.log('trxCount:', homeInfo.transactionCount);
-      homeInfo.missedCount = result[14];
-      homeInfo.unclaimed = Math.round(result[15].amount / config.basePrecision);
-      homeInfo.nrAssetTrx = (result[16]) ? result[16].totalAssetTrx: 0;
-
-      var collaterals = result[17];
-
-      var totalCollateral = 0,
-        j = 0;
-      for (var i = 0; i < collaterals.length; i++) {
-        if (collaterals[i]._id === 0) {
-          for (j = collaterals[i].supply.length - 1; j > 0; j--) {
-            if (startDay.getTime() > collaterals[i].supply[j][0]) {
-              break;
-            }
+    Q.all([
+        accountsCollection.count({}),
+        accountsCollection.count({
+          reg_date_ISO: {
+            $gte: startDay
           }
-          homeInfo.dailyInflation = collaterals[i].currentSupply - collaterals[i].supply[j][1];
-          homeInfo.btsxSupply = collaterals[i].currentSupply;
+        }),
+        accountsCollection.count({
+          reg_date_ISO: {
+            $gte: startWeek
+          }
+        }),
+        accountsCollection.count({
+          isSub: true
+        }),
+        delegatesListCollection.count({}),
+        delegatesListCollection.count({
+          'delegate_info.votes_for': {
+            '$gt': 0
+          }
+        }),
+        delegatesListCollection.count({
+          reg_date_ISO: {
+            $gte: startDay
+          }
+        }),
+        delegatesListCollection.count({
+          reg_date_ISO: {
+            $gte: startWeek
+          }
+        }),
+        securityCollection.find({}),
+        assetsCollection.count({}),
+        assetsCollection.count({
+          issuer_id: {
+            $gt: 0
+          }
+        }),
+        assetsCollection.count({
+          reg_date_ISO: {
+            $gte: startMonth
+          }
+        }),
+        assetsCollection.count({
+          reg_date_ISO: {
+            $gte: startWeek
+          }
+        }),
+        transactionsCollection.count({}),
+        missedCollection.count({}),
+        utils.rpcCall('blockchain_unclaimed_genesis', []),
+        transactionChartCollectionHour.findOne({}, {
+          sort: {
+            _id: -1
+          }
+        }),
+        null, // supplyCollection.find({}),
+        blockchainInfoCollection.find(),
+        delegatesListCollection.find({
+          rank: {
+            $lt: 102
+          }
+        }, {
+          fields: {
+            delegate_info: 1
+          }
+        })
+      ])
+      .then(function(result) {
+        var homeInfo = {};
+        homeInfo._id = 1;
+        homeInfo.numberOfUsers = result[0];
+        homeInfo.newAccountsDay = result[1];
+        homeInfo.newAccountsWeek = result[2];
+        homeInfo.subaccounts = result[3];
+        homeInfo.numberOfDelegates = result[4];
+        homeInfo.numberOfVotedDelegates = result[5];
+        homeInfo.newDelegatesDay = result[6];
+        homeInfo.newDelegatesWeek = result[7];
+        homeInfo.security = result[8][0];
+        homeInfo.assetCount = result[9];
+        homeInfo.userAssets = result[10];
+        homeInfo.newAssetsMonth = result[11];
+        homeInfo.newAssetsWeek = result[12];
+        homeInfo.transactionCount = result[13];
+        // console.log('trxCount:', homeInfo.transactionCount);
+        homeInfo.missedCount = result[14];
+        homeInfo.unclaimed = Math.round(result[15].amount / config.basePrecision);
+        homeInfo.nrAssetTrx = (result[16]) ? result[16].totalAssetTrx : 0;
+
+        var collaterals = result[17];
+
+        /*
+        var totalCollateral = 0,
+          j = 0;
+        for (var i = 0; i < collaterals.length; i++) {
+          if (collaterals[i]._id === 0) {
+            for (j = collaterals[i].supply.length - 1; j > 0; j--) {
+              if (startDay.getTime() > collaterals[i].supply[j][0]) {
+                break;
+              }
+            }
+            homeInfo.dailyInflation = collaterals[i].currentSupply - collaterals[i].supply[j][1];
+            homeInfo.btsxSupply = collaterals[i].currentSupply;
+          }
+          if (collaterals[i].currentCollateral) {
+            totalCollateral += collaterals[i].currentCollateral;
+          }
         }
-        if (collaterals[i].currentCollateral) {
-          totalCollateral += collaterals[i].currentCollateral;
-        }
-      }
-      homeInfo.totalCollateral = totalCollateral;
+        homeInfo.totalCollateral = totalCollateral;
+        */
+        homeInfo.delegatePayRate = result[18][0].max_delegate_pay_issued_per_block / config.basePrecision;
 
-      homeInfo.delegatePayRate = result[18][0].max_delegate_pay_issued_per_block / config.basePrecision;
+        homeInfo.assetReg = result[18][0].short_symbol_asset_reg_fee / config.basePrecision;
+        homeInfo.assetRegLong = result[18][0].long_symbol_asset_reg_fee / config.basePrecision;
+        homeInfo.delegateReg = result[18][0].max_delegate_reg_fee / config.basePrecision;
 
-      homeInfo.assetReg = result[18][0].short_symbol_asset_reg_fee / config.basePrecision;
-      homeInfo.assetRegLong = result[18][0].long_symbol_asset_reg_fee / config.basePrecision;
-      homeInfo.delegateReg = result[18][0].max_delegate_reg_fee / config.basePrecision;
+        homeInfo.averagePay = 0;
+        result[19].forEach(function(delegate) {
+          homeInfo.averagePay += delegate.delegate_info.pay_rate;
+        });
+        homeInfo.averagePay = homeInfo.averagePay * homeInfo.delegatePayRate / 100 / 101;
 
-      homeInfo.averagePay = 0;
-      result[19].forEach(function(delegate) {
-        homeInfo.averagePay += delegate.delegate_info.pay_rate;
+        homeCollection.update({
+          '_id': parseInt(homeInfo._id)
+        }, homeInfo, {
+          'upsert': true
+        }).success(function(doc) {
+          return console.log("** HOME UPDATE DONE **");
+          homeRunning = false;
+        });
+      })
+      .catch(function(err) {
+        homeRunning = false;
+        return console.log('HOME UPDATE FAILED', err);
       });
-      homeInfo.averagePay = homeInfo.averagePay * homeInfo.delegatePayRate / 100 / 101;
-
-      homeCollection.update({
-        '_id': parseInt(homeInfo._id)
-      }, homeInfo, {
-        'upsert': true
-      }).success(function(doc) {
-        return console.log('wrote home collection');
-      });
-    })
-    .catch(function(err) {
-      console.log('HOME UPDATE FAILED');
-      console.log(err);
-    });
+  }
 }
 
 function securityInfo() {
