@@ -1,5 +1,5 @@
 var redis = require("redis");
-var pub = redis.createClient();
+var redisPub = redis.createClient();
 
 module.exports = function(db_api) {
 
@@ -9,14 +9,13 @@ module.exports = function(db_api) {
                 var subFunction = sub => {
                     if (sub && sub.length > 0) {
                         sub.forEach(result => {
-                            // console.log("sub forEach:", result);
 
                             // Dynamic global object
                             if (result.id === "2.1.0") {
                                 db_api.call("get_block", [result.head_block_number]).then(block => {
                                     console.log("got head block:", result.head_block_number, block);
                                     block.id = result.head_block_number;
-                                    pub.publish('new_block', JSON.stringify(block));
+                                    redisPub.publish('new_block', JSON.stringify(block));
                                 }).catch(err => {
                                     console.log("get block error:", err);
                                 })
@@ -31,8 +30,8 @@ module.exports = function(db_api) {
                     // console.log("subFunction calldback:", sub);
                 }
 
-                db_api.call("subscribe_to_objects", [subFunction, ["2.0.0", "2.1.0"]]).then(function(result) {
-                    // console.log("sub:", result);
+                db_api.call("get_objects", [["2.0.0", "2.1.0"]]).then(function(result) {
+                    // console.log("get_objects:", result);
                 }).catch(err => {
                     console.log("subscribe_to_objects error:", err);
                 })

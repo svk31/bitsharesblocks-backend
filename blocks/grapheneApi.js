@@ -60,8 +60,8 @@ function WebsocketAPI(url) {
 
     var messageHandler = function(response) {
         if (response) {
-            // console.log("ws response:", response);
             if (response.method === "notice") {
+                // console.log("ws response:", JSON.stringify(response));
                 return subs[response.params[0]].callback(response.params[1]);
             }
             callbacks[response.id].resolve(response.result);
@@ -72,7 +72,7 @@ function WebsocketAPI(url) {
 
     this.call = function(params) {
         var deferred = Q.defer();
-        if (params[1] === "subscribe_to_objects" || params[1] === "subscribe_to_market") {
+        if (params[1] === "set_subscribe_callback" || params[1] === "subscribe_to_market") {
             subs[this.current_callback_id] = {
                 callback: params[2][0],
                 params: params[2][1]
