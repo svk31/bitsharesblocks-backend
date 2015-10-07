@@ -28,7 +28,7 @@ module.exports = {
 
 	getObjectType(object) {
 		if (!this.isObjectId(object)) {
-			console.log(object + "is not a valid object id");
+			return console.log(object + " is not a valid object id");
 		}
 
 		let idParts = object.split(".");
@@ -49,6 +49,19 @@ module.exports = {
 		}
 
 		console.log("Object type not found for object: " + JSON.stringify(idParts));
+
+		return "unknown";
+
+	},
+	getOperationType(op_id) {
+
+		for (let type in chainTypes.operations) {
+			if (chainTypes.operations[type] === parseInt(op_id, 10)) {
+				return type;
+			}
+		}
+
+		console.log("Operation type not found for Operation: " + op_id);
 
 		return "unknown";
 

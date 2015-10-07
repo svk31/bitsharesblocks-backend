@@ -3,7 +3,8 @@
   "version": "0.0.2",
   "private": true,
   "scripts": {
-    "start": "forever -c '/usr/bin/nodemon --delay 7 --exitcrash --harmony' ./backend-server.js"
+    "babel-node": "babel-node --stage 1 --ignore='foo|bar|baz'",
+    "start": "forever -c '/usr/bin/nodemon --exec babel-node --delay 5 --exitcrash' ./backend-server.js"
   },
   "dependencies": {
     "apicache": "0.0.12",
@@ -11,7 +12,9 @@
     "compression": "^1.1.1",
     "cors": "^2.5.3",
     "debug": "~0.7.4",
+    "enode": "^0.1.5",
     "express": "~4.2.0",
+    "messenger": "0.0.9",
     "moment": "^2.8.4",
     "monk": "^0.9.0",
     "morgan": "~1.0.0",
@@ -19,5 +22,11 @@
     "q": "^1.1.2",
     "request": "^2.53.0",
     "sizeof": "^1.0.0"
+  },
+  "devDependencies": {
+    "babel-core": "^5.8.25",
+    "dnode": "^1.2.2",
+    "redis": "^2.0.1",
+    "socket.io": "^1.3.7"
   }
 }

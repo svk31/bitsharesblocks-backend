@@ -7,6 +7,8 @@
     "start": "forever -c '/usr/bin/nodemon --exec babel-node --delay 5 --exitcrash' blocksController.js"
   },
   "dependencies": {
+    "lodash": "^3.10.1",
+    "messenger": "0.0.9",
     "moment": "^2.8.2",
     "mongodb": "^1.4.25",
     "monk": "^0.9.0",
@@ -14,6 +16,9 @@
     "ws": "^0.7.2"
   },
   "devDependencies": {
-    "babel-core": "^5.8.25"
+    "babel-core": "^5.8.25",
+    "dnode": "^1.2.2",
+    "node-monkey": "^0.2.16",
+    "redis": "^1.0.0"
   }
 }

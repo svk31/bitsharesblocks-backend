@@ -1,41 +1,71 @@
+var utils = require("../../utils/utils");
 var redis = require("redis");
-var redisPub = redis.createClient();
+var redisClient = redis.createClient();
+import objectClasses from "../object_classes/objects";
 
-module.exports = function(db_api) {
+module.exports = function(db_api, redisServer, db, ChainStateApi) {
+    var transactionsCollection = db.get('transactions');
 
-    return {
-        latestBlocks: function() {
-                console.log("latestBlocks");
-                var subFunction = sub => {
-                    if (sub && sub.length > 0) {
-                        sub.forEach(result => {
-
-                            // Dynamic global object
-                            if (result.id === "2.1.0") {
-                                db_api.call("get_block", [result.head_block_number]).then(block => {
-                                    console.log("got head block:", result.head_block_number, block);
-                                    block.id = result.head_block_number;
-                                    redisPub.publish('new_block', JSON.stringify(block));
-                                }).catch(err => {
-                                    console.log("get block error:", err);
-                                })
-                            }
-                        });
-                    }
-
-                    // console.log("sub length:", sub.length, sub[0]);
-                    // for (var i = 0; i < sub[0].length; i++) {
-                    //     console.log("sub[0][i]:", sub[0][i]);
-                    // };
-                    // console.log("subFunction calldback:", sub);
+    let blockMethods = {
+        getBlock: (height, headBlock) => {
+            return ChainStateApi.fetchBlock(height).then(block => {
+                if (headBlock) {
+                    let shortBlock = objectClasses.shortBlock(block);
+                    ChainStateApi.addBlock(shortBlock);
+                    redisServer.publish('new_block', JSON.stringify(shortBlock));
                 }
 
-                db_api.call("get_objects", [["2.0.0", "2.1.0"]]).then(function(result) {
-                    // console.log("get_objects:", result);
-                }).catch(err => {
-                    console.log("subscribe_to_objects error:", err);
-                })
+                if (block.transactions.length) {
+                    // console.log("got block with transactions:", height, block);
+                    block._id = height;
+                    block.trxCount = block.transactions.length;
+                    block.types = [];
+
+                    block.transactions.forEach(trx => {
+                        trx.operations.forEach(op => {
+                            block.types.push(utils.getOperationType(op[0]));
+                        })
+                    });
+                    transactionsCollection.update({
+                        '_id': height
+                    }, block, {
+                        'upsert': true
+                    })
+                }
+            }).catch(err => {
+                console.log("getBlock error:", err);
+            })
+        },
+        getAllBlocks: () => {
+            console.log("try to getAllBlocks 1 ->", ChainStateApi.getHeadBlock());
+            for (let i = 1; i <= ChainStateApi.getHeadBlock(); i++) {
+                blockMethods.getBlock(i);
+            };
         }
     }
+
+    redisClient.subscribe("dynamic_global_property");
+
+    redisClient.on("message", function(channel, data) {
+        data = JSON.parse(data);
+        switch (channel) {
+            case "dynamic_global_property":
+                blockMethods.getBlock(data.head, true);
+                break;
+
+            default:
+
+                break;
+        }
+    });
+
+    // Fetch 20 latest blocks on launch
+    ChainStateApi.getObject("2.1.0").then(object => {
+        for (var i = object.head_block_number - 19; i <= object.head_block_number; i++) {
+            blockMethods.getBlock(i, true);
+        };
+    })
+
+    return blockMethods;
 
 }

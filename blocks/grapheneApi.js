@@ -31,6 +31,7 @@ function WebsocketAPI(url) {
                     console.log("on open error:", err);
                     initPromise.reject(err);
                 } else {
+                    console.log("success opening ws");
                     initPromise.resolve(data);
                 }
 
