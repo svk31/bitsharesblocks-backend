@@ -1,4 +1,3 @@
-var enode = require('enode');
 var Q = require("q");
 var config = require('../config.json');
 var messenger = require("messenger");
